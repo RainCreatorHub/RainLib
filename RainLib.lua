@@ -1,160 +1,3 @@
-local RainLib = {
-    Version = "1.0.10",
-    Themes = {
-        Dark = {
-            Background = Color3.fromRGB(30, 30, 30),
-            Accent = Color3.fromRGB(50, 150, 255),
-            Text = Color3.fromRGB(255, 255, 255),
-            Secondary = Color3.fromRGB(50, 50, 50),
-            Disabled = Color3.fromRGB(100, 100, 100)
-        }
-    },
-    Icons = {
-        ["monitor"] = "rbxassetid://10734896360",
-        ["monitorspeaker"] = "rbxassetid://10734896512",
-        ["moon"] = "rbxassetid://10734897102",
-        ["morehorizontal"] = "rbxassetid://10734897250",
-        ["morevertical"] = "rbxassetid://10734897387",
-        ["mountain"] = "rbxassetid://10734897956",
-        ["mountainsnow"] = "rbxassetid://10734897665",
-        ["mouse"] = "rbxassetid://10734898592",
-        ["mousepointer"] = "rbxassetid://10734898476",
-        ["mousepointer2"] = "rbxassetid://10734898194",
-        ["mousepointerclick"] = "rbxassetid://10734898355",
-        ["move"] = "rbxassetid://10734900011",
-        ["move3d"] = "rbxassetid://10734898756",
-        ["movediagonal"] = "rbxassetid://10734899164",
-        ["movediagonal2"] = "rbxassetid://10734898934",
-        ["settings"] = "rbxassetid://10734950309",
-        ["settings2"] = "rbxassetid://10734950020",
-        ["sliders"] = "rbxassetid://10734963400",
-        ["slidershorizontal"] = "rbxassetid://10734963191",
-        ["smartphone"] = "rbxassetid://10734963940",
-        ["smartphonecharging"] = "rbxassetid://10734963671",
-        ["smile"] = "rbxassetid://10734964441",
-        ["smileplus"] = "rbxassetid://10734964188",
-        ["snowflake"] = "rbxassetid://10734964600",
-        ["sofa"] = "rbxassetid://10734964852",
-        ["sortasc"] = "rbxassetid://10734965115",
-        ["sortdesc"] = "rbxassetid://10734965287",
-        ["speaker"] = "rbxassetid://10734965419",
-        ["sprout"] = "rbxassetid://10734965572",
-        ["square"] = "rbxassetid://10734965702",
-        ["star"] = "rbxassetid://10734966248",
-        ["starhalf"] = "rbxassetid://10734965897",
-        ["staroff"] = "rbxassetid://10734966097",
-        ["stethoscope"] = "rbxassetid://10734966384",
-        ["sticker"] = "rbxassetid://10734972234",
-        ["stickynote"] = "rbxassetid://10734972463",
-        ["stopcircle"] = "rbxassetid://10734972621",
-        ["stretchhorizontal"] = "rbxassetid://10734972862",
-        ["stretchvertical"] = "rbxassetid://10734973130",
-        ["strikethrough"] = "rbxassetid://10734973290",
-        ["subscript"] = "rbxassetid://10734973457",
-        ["sun"] = "rbxassetid://10734974297",
-        ["sundim"] = "rbxassetid://10734973645",
-        ["sunmedium"] = "rbxassetid://10734973778",
-        ["sunmoon"] = "rbxassetid://10734973999",
-        ["sunsnow"] = "rbxassetid://10734974130",
-        ["sunrise"] = "rbxassetid://10734974522",
-        ["sunset"] = "rbxassetid://10734974689",
-        ["superscript"] = "rbxassetid://10734974850",
-        ["swissfranc"] = "rbxassetid://10734975024",
-        ["switchcamera"] = "rbxassetid://10734975214",
-        ["sword"] = "rbxassetid://10734975486",
-        ["swords"] = "rbxassetid://10734975692",
-        ["syringe"] = "rbxassetid://10734975932",
-        ["table"] = "rbxassetid://10734976230",
-        ["table2"] = "rbxassetid://10734976097",
-        ["tablet"] = "rbxassetid://10734976394",
-        ["tag"] = "rbxassetid://10734976528",
-        ["tags"] = "rbxassetid://10734976739",
-        ["target"] = "rbxassetid://10734977012",
-        ["tent"] = "rbxassetid://10734981750",
-        ["terminal"] = "rbxassetid://10734982144",
-        ["terminalsquare"] = "rbxassetid://10734981995",
-        ["textcursor"] = "rbxassetid://10734982395",
-        ["textcursorinput"] = "rbxassetid://10734982297",
-        ["thermometer"] = "rbxassetid://10734983134",
-        ["thermometersnowflake"] = "rbxassetid://10734982571",
-        ["thermometersun"] = "rbxassetid://10734982771",
-        ["thumbsdown"] = "rbxassetid://10734983359",
-        ["thumbsup"] = "rbxassetid://10734983629",
-        ["ticket"] = "rbxassetid://10734983868",
-        ["timer"] = "rbxassetid://10734984606",
-        ["timeroff"] = "rbxassetid://10734984138",
-        ["timerreset"] = "rbxassetid://10734984355",
-        ["toggleleft"] = "rbxassetid://10734984834",
-        ["toggleright"] = "rbxassetid://10734985040",
-        ["tornado"] = "rbxassetid://10734985247",
-        ["toybrick"] = "rbxassetid://10747361919",
-        ["train"] = "rbxassetid://10747362105",
-        ["trash"] = "rbxassetid://10747362393",
-        ["trash2"] = "rbxassetid://10747362241",
-        ["treedeciduous"] = "rbxassetid://10747362534",
-        ["treepine"] = "rbxassetid://10747362748",
-        ["trees"] = "rbxassetid://10747363016",
-        ["trendingdown"] = "rbxassetid://10747363205",
-        ["trendingup"] = "rbxassetid://10747363465",
-        ["triangle"] = "rbxassetid://10747363621",
-        ["trophy"] = "rbxassetid://10747363809",
-        ["truck"] = "rbxassetid://10747364031",
-        ["tv"] = "rbxassetid://10747364593",
-        ["tv2"] = "rbxassetid://10747364302",
-        ["type"] = "rbxassetid://10747364761",
-        ["umbrella"] = "rbxassetid://10747364971",
-        ["underline"] = "rbxassetid://10747365191",
-        ["undo"] = "rbxassetid://10747365484",
-        ["undo2"] = "rbxassetid://10747365359",
-        ["unlink"] = "rbxassetid://10747365771",
-        ["unlink2"] = "rbxassetid://10747397871",
-        ["unlock"] = "rbxassetid://10747366027",
-        ["upload"] = "rbxassetid://10747366434",
-        ["uploadcloud"] = "rbxassetid://10747366266",
-        ["usb"] = "rbxassetid://10747366606",
-        ["user"] = "rbxassetid://10747373176",
-        ["usercheck"] = "rbxassetid://10747371901",
-        ["usercog"] = "rbxassetid://10747372167",
-        ["userminus"] = "rbxassetid://10747372346",
-        ["userplus"] = "rbxassetid://10747372702",
-        ["userx"] = "rbxassetid://10747372992",
-        ["users"] = "rbxassetid://10747373426",
-        ["utensils"] = "rbxassetid://10747373821",
-        ["utensilscrossed"] = "rbxassetid://10747373629",
-        ["venetianmask"] = "rbxassetid://10747374003",
-        ["verified"] = "rbxassetid://10747374131",
-        ["vibrate"] = "rbxassetid://10747374489",
-        ["vibrateoff"] = "rbxassetid://10747374269",
-        ["video"] = "rbxassetid://10747374938",
-        ["videooff"] = "rbxassetid://10747374721",
-        ["view"] = "rbxassetid://10747375132",
-        ["voicemail"] = "rbxassetid://10747375281",
-        ["volume"] = "rbxassetid://10747376008",
-        ["volume1"] = "rbxassetid://10747375450",
-        ["volume2"] = "rbxassetid://10747375679",
-        ["volumex"] = "rbxassetid://10747375880",
-        ["wallet"] = "rbxassetid://10747376205",
-        ["wand"] = "rbxassetid://10747376565",
-        ["wand2"] = "rbxassetid://10747376349",
-        ["watch"] = "rbxassetid://10747376722",
-        ["waves"] = "rbxassetid://10747376931",
-        ["webcam"] = "rbxassetid://10747381992",
-        ["wifi"] = "rbxassetid://10747382504",
-        ["wifioff"] = "rbxassetid://10747382268",
-        ["wind"] = "rbxassetid://10747382750",
-        ["wraptext"] = "rbxassetid://10747383065",
-        ["wrench"] = "rbxassetid://10747383470",
-        ["x"] = "rbxassetid://10747384394",
-        ["xcircle"] = "rbxassetid://10747383819",
-        ["xoctagon"] = "rbxassetid://10747384037",
-        ["xsquare"] = "rbxassetid://10747384217",
-        ["zoomin"] = "rbxassetid://10747384552",
-        ["zoomout"] = "rbxassetid://10747384679"
-    },
-    Windows = {},
-    CurrentTheme = nil
-}
-
 print("[RainLib] Carregando serviços...")
 
 local TweenService = game:GetService("TweenService")
@@ -183,8 +26,7 @@ local success, err = pcall(function()
     RainLib.Notifications.Parent = RainLib.ScreenGui
 end)
 if not success then
-    warn("[RainLib] Erro na inicialização: " .. err)
-    return nil
+    return nil -- Sai silenciosamente se der erro
 end
 print("[RainLib] Inicializado com sucesso!")
 
@@ -269,8 +111,7 @@ function RainLib:Window(options)
         window.TabIndicator.Parent = window.TabContainer
     end)
     if not success then
-        warn("[RainLib] Erro ao criar janela: " .. err)
-        return nil
+        return nil -- Sai silenciosamente se der erro
     end
     print("[RainLib] Janela criada!")
     
@@ -318,7 +159,7 @@ function RainLib:Window(options)
         options = options or {}
         local button = Instance.new("TextButton")
         button.Size = UDim2.new(0, 100, 0, 30)
-        button.Position = options.Position or UDim2.new(0, 10, 0, 10)
+        button.Position = UDim2.new(0, 10, 0, 10) -- Posição fixa
         button.Text = options.Text or "Toggle UI"
         button.BackgroundColor3 = RainLib.CurrentTheme.Accent
         button.TextColor3 = RainLib.CurrentTheme.Text
@@ -612,7 +453,7 @@ function RainLib:Window(options)
             
             return slider
         end
-
+        
         function tab:Dropdown(options)
             local dropdownSize = options.Size or UDim2.new(0, 150, 0, 30)
             local dropdown = { Value = options.Default or options.Options[1] }
@@ -734,9 +575,7 @@ function RainLib:Notify(options)
             print("[RainLib] Notificação removida")
         end)
     end)
-    if not success then
-        warn("[RainLib] Erro na notificação: " .. err)
-    end
+    -- Sem warn, ignora erros silenciosamente
 end
 
 function RainLib:SetTheme(theme)
@@ -774,11 +613,10 @@ function RainLib:SetTheme(theme)
             end
         end
     end)
-    if not success then
-        warn("[RainLib] Erro ao mudar tema: " .. err)
-    else
+    if success then
         print("[RainLib] Tema mudado com sucesso!")
     end
+    -- Sem warn, ignora erros silenciosamente
 end
 
 print("[RainLib] Biblioteca carregada!")
