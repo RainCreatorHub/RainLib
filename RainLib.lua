@@ -667,7 +667,7 @@ local RainLib = {
 			["scroll"] = "rbxassetid://10734943448",
 			["search"] = "rbxassetid://10734943674",
 			["send"] = "rbxassetid://10734943902",
-			["separatorhorizontal"] = "rbxassetid://10734944115",
+			["separatorhorizontal"] = "rbxassetid://10734944115"
 },
     Windows = {},
     CurrentTheme = nil
