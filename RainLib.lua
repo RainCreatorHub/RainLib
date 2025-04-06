@@ -1,5 +1,5 @@
 local RainLib = {
-    Version = "1.0.4",
+    Version = "1.0.10",
     Themes = {
         Dark = {
             Background = Color3.fromRGB(30, 30, 30),
@@ -10,6 +10,23 @@ local RainLib = {
         }
     },
     Icons = {
+        ["monitor"] = "rbxassetid://10734896360",
+        ["monitorspeaker"] = "rbxassetid://10734896512",
+        ["moon"] = "rbxassetid://10734897102",
+        ["morehorizontal"] = "rbxassetid://10734897250",
+        ["morevertical"] = "rbxassetid://10734897387",
+        ["mountain"] = "rbxassetid://10734897956",
+        ["mountainsnow"] = "rbxassetid://10734897665",
+        ["mouse"] = "rbxassetid://10734898592",
+        ["mousepointer"] = "rbxassetid://10734898476",
+        ["mousepointer2"] = "rbxassetid://10734898194",
+        ["mousepointerclick"] = "rbxassetid://10734898355",
+        ["move"] = "rbxassetid://10734900011",
+        ["move3d"] = "rbxassetid://10734898756",
+        ["movediagonal"] = "rbxassetid://10734899164",
+        ["movediagonal2"] = "rbxassetid://10734898934",
+        ["settings"] = "rbxassetid://10734950309",
+        ["settings2"] = "rbxassetid://10734950020",
         ["sliders"] = "rbxassetid://10734963400",
         ["slidershorizontal"] = "rbxassetid://10734963191",
         ["smartphone"] = "rbxassetid://10734963940",
@@ -299,45 +316,24 @@ function RainLib:Window(options)
     function window:Minimize(options)
         print("[RainLib] Criando botão de minimizar...")
         options = options or {}
-        local button
-        local isImage = options.Text1 and options.Text1:match("^rbxassetid://") or options.Text2 and options.Text2:match("^rbxassetid://")
-        
-        if isImage then
-            button = Instance.new("ImageButton")
-            button.Image = options.Text1 or "rbxassetid://10734966248" -- Default: "star"
-        else
-            button = Instance.new("TextButton")
-            button.Text = options.Text1 or "Open"
-            button.Font = Enum.Font.SourceSansBold
-            button.TextSize = 16
-            button.TextColor3 = RainLib.CurrentTheme.Text
-        end
-        
-        local format = options.Format or "rectangle"
-        if format == "circle" then
-            button.Size = UDim2.new(0, 40, 0, 40)
-        elseif format == "square" then
-            button.Size = UDim2.new(0, 50, 0, 50)
-        else -- rectangle
-            button.Size = UDim2.new(0, 100, 0, 30)
-        end
-        
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 100, 0, 30)
         button.Position = options.Position or UDim2.new(0, 10, 0, 10)
+        button.Text = options.Text or "Toggle UI"
         button.BackgroundColor3 = RainLib.CurrentTheme.Accent
+        button.TextColor3 = RainLib.CurrentTheme.Text
+        button.Font = Enum.Font.SourceSansBold
+        button.TextSize = 16
         button.BackgroundTransparency = options.BackgroundTransparency or 0
         button.Parent = RainLib.ScreenGui
         
         local corner = Instance.new("UICorner")
-        corner.CornerRadius = format == "circle" and UDim.new(0.5, 0) or UDim.new(0, 8)
+        corner.CornerRadius = options.CornerRadius or UDim.new(0, 8)
         corner.Parent = button
         
         button.MouseButton1Click:Connect(function()
             window.MainFrame.Visible = not window.MainFrame.Visible
-            if isImage then
-                button.Image = window.MainFrame.Visible and (options.Text1 or "rbxassetid://10734966248") or (options.Text2 or "rbxassetid://10747384394") -- Default: "x"
-            else
-                button.Text = window.MainFrame.Visible and (options.Text1 or "Open") or (options.Text2 or "Close")
-            end
+            button.Text = window.MainFrame.Visible and (options.Text or "Toggle UI") or "Show UI"
             print("[RainLib] GUI " .. (window.MainFrame.Visible and "aberto" or "fechado"))
         end)
         
@@ -362,6 +358,21 @@ function RainLib:Window(options)
         tab.Content.CanvasPosition = Vector2.new(0, 0)
         tab.Content.Visible = false
         tab.Content.Parent = window.MainFrame
+        
+        tab.Container = Instance.new("Frame")
+        tab.Container.Size = UDim2.new(1, -10, 1, -10)
+        tab.Container.Position = UDim2.new(0, 5, 0, 5)
+        tab.Container.BackgroundTransparency = 1
+        tab.Container.Parent = tab.Content
+        
+        local containerCorner = Instance.new("UICorner")
+        containerCorner.CornerRadius = UDim.new(0, 8)
+        containerCorner.Parent = tab.Container
+        
+        local containerStroke = Instance.new("UIStroke")
+        containerStroke.Thickness = 1
+        containerStroke.Color = Color3.fromRGB(0, 0, 0)
+        containerStroke.Parent = tab.Container
         
         tab.Button = Instance.new("TextButton")
         tab.Button.Size = UDim2.new(1, -10, 0, 40)
@@ -442,7 +453,7 @@ function RainLib:Window(options)
             button.TextColor3 = RainLib.CurrentTheme.Text
             button.Font = Enum.Font.SourceSansBold
             button.TextSize = 16
-            button.Parent = tab.Content
+            button.Parent = tab.Container
             
             local corner = Instance.new("UICorner")
             corner.CornerRadius = UDim.new(0, 8)
@@ -462,7 +473,7 @@ function RainLib:Window(options)
             textbox.TextColor3 = RainLib.CurrentTheme.Text
             textbox.Font = Enum.Font.SourceSans
             textbox.TextSize = 16
-            textbox.Parent = tab.Content
+            textbox.Parent = tab.Container
             
             local corner = Instance.new("UICorner")
             corner.CornerRadius = UDim.new(0, 8)
@@ -484,7 +495,7 @@ function RainLib:Window(options)
             frame.Size = toggleSize
             frame.Position = getNextPosition(toggleSize)
             frame.BackgroundColor3 = RainLib.CurrentTheme.Secondary
-            frame.Parent = tab.Content
+            frame.Parent = tab.Container
             
             local corner = Instance.new("UICorner")
             corner.CornerRadius = UDim.new(0, 8)
@@ -529,7 +540,7 @@ function RainLib:Window(options)
             frame.Size = sliderSize
             frame.Position = getNextPosition(sliderSize)
             frame.BackgroundColor3 = RainLib.CurrentTheme.Secondary
-            frame.Parent = tab.Content
+            frame.Parent = tab.Container
             
             local corner = Instance.new("UICorner")
             corner.CornerRadius = UDim.new(0, 8)
@@ -601,7 +612,7 @@ function RainLib:Window(options)
             
             return slider
         end
-        
+
         function tab:Dropdown(options)
             local dropdownSize = options.Size or UDim2.new(0, 150, 0, 30)
             local dropdown = { Value = options.Default or options.Options[1] }
@@ -609,7 +620,7 @@ function RainLib:Window(options)
             frame.Size = dropdownSize
             frame.Position = getNextPosition(dropdownSize)
             frame.BackgroundColor3 = RainLib.CurrentTheme.Secondary
-            frame.Parent = tab.Content
+            frame.Parent = tab.Container
             
             local corner = Instance.new("UICorner")
             corner.CornerRadius = UDim.new(0, 8)
@@ -740,14 +751,12 @@ function RainLib:SetTheme(theme)
             window.TabIndicator.BackgroundColor3 = theme.Accent
             for _, tab in pairs(window.Tabs) do
                 tab.Button.TextColor3 = theme.Text
-                tab.Content.BackgroundColor3 = theme.Background
-                tab.Content.UIStroke.Color = theme.Accent
                 for _, child in pairs(tab.Button:GetChildren()) do
                     if child:IsA("TextLabel") then
                         child.TextColor3 = theme.Text
                     end
                 end
-                for _, child in pairs(tab.Content:GetChildren()) do
+                for _, child in pairs(tab.Container:GetChildren()) do
                     if child:IsA("TextButton") or child:IsA("TextBox") then
                         child.BackgroundColor3 = theme.Accent
                         child.TextColor3 = theme.Text
