@@ -20,7 +20,7 @@ local RainLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/RainC
     Window:Minimize({
         Text1 = "close",
         Text2 = "open",
-        Position = UDim2.new(0, 10, 0, 10)
+        Draggable = true
     })
 ```
 
