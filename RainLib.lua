@@ -1,5 +1,5 @@
 local RainLib = {
-    Version = "1.0.1",
+    Version = "1.0.2",
     Themes = {
         Dark = {
             Background = Color3.fromRGB(30, 30, 30),
@@ -15,19 +15,16 @@ local RainLib = {
 
 print("[RainLib] Carregando serviços...")
 
--- Serviços do Roblox
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
--- Função utilitária pra animações
 local function tween(obj, info, properties)
     local tween = TweenService:Create(obj, info or TweenInfo.new(0.3), properties)
     tween:Play()
     return tween
 end
 
--- Inicialização automática
 print("[RainLib] Inicializando...")
 local success, err = pcall(function()
     RainLib.ScreenGui = Instance.new("ScreenGui")
@@ -49,7 +46,6 @@ if not success then
 end
 print("[RainLib] Inicializado com sucesso!")
 
--- Criar uma janela
 function RainLib:Window(options)
     print("[RainLib] Criando janela...")
     local window = {}
@@ -60,6 +56,7 @@ function RainLib:Window(options)
     window.Position = options.Position or UDim2.new(0.5, -250, 0.5, -175)
     window.Minimized = false
     window.Tabs = {}
+    window.CurrentTabIndex = 1 -- Índice da aba ativa
     
     local success, err = pcall(function()
         window.MainFrame = Instance.new("Frame")
@@ -114,7 +111,7 @@ function RainLib:Window(options)
         closeCorner.CornerRadius = UDim.new(0, 8)
         closeCorner.Parent = window.CloseButton
         
-        -- Container de abas (vertical à esquerda, igual Fluent)
+        -- Container de abas
         window.TabContainer = Instance.new("ScrollingFrame")
         window.TabContainer.Size = UDim2.new(0, 150, 1, -40)
         window.TabContainer.Position = UDim2.new(0, 0, 0, 40)
@@ -122,6 +119,42 @@ function RainLib:Window(options)
         window.TabContainer.ScrollBarThickness = 0
         window.TabContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
         window.TabContainer.Parent = window.MainFrame
+        
+        -- Indicador animado
+        window.TabIndicator = Instance.new("Frame")
+        window.TabIndicator.Size = UDim2.new(0, 3, 0, 40)
+        window.TabIndicator.BackgroundColor3 = RainLib.CurrentTheme.Accent
+        window.TabIndicator.Position = UDim2.new(0, 0, 0, 5)
+        window.TabIndicator.Parent = window.TabContainer
+        
+        -- Botões de navegação
+        window.NavUp = Instance.new("TextButton")
+        window.NavUp.Size = UDim2.new(0, 30, 0, 30)
+        window.NavUp.Position = UDim2.new(0, 110, 0, 5)
+        window.NavUp.BackgroundColor3 = RainLib.CurrentTheme.Accent
+        window.NavUp.Text = "↑"
+        window.NavUp.TextColor3 = RainLib.CurrentTheme.Text
+        window.NavUp.Font = Enum.Font.SourceSansBold
+        window.NavUp.TextSize = 16
+        window.NavUp.Parent = window.TitleBar
+        
+        window.NavDown = Instance.new("TextButton")
+        window.NavDown.Size = UDim2.new(0, 30, 0, 30)
+        window.NavDown.Position = UDim2.new(0, 145, 0, 5)
+        window.NavDown.BackgroundColor3 = RainLib.CurrentTheme.Accent
+        window.NavDown.Text = "↓"
+        window.NavDown.TextColor3 = RainLib.CurrentTheme.Text
+        window.NavDown.Font = Enum.Font.SourceSansBold
+        window.NavDown.TextSize = 16
+        window.NavDown.Parent = window.TitleBar
+        
+        local navCornerUp = Instance.new("UICorner")
+        navCornerUp.CornerRadius = UDim.new(0, 5)
+        navCornerUp.Parent = window.NavUp
+        
+        local navCornerDown = Instance.new("UICorner")
+        navCornerDown.CornerRadius = UDim.new(0, 5)
+        navCornerDown.Parent = window.NavDown
     end)
     if not success then
         warn("[RainLib] Erro ao criar janela: " .. err)
@@ -198,26 +231,25 @@ function RainLib:Window(options)
         return button
     end
     
-    -- Sistema de abas estilo Fluent
+    -- Sistema de abas bonito e funcional
     function window:Tab(options)
         print("[RainLib] Criando aba...")
         local tab = {}
         options = options or {}
         tab.Name = options.Name or "Tab"
-        tab.Icon = options.Icon or nil -- Ícone opcional (rbxassetid)
+        tab.Icon = options.Icon or nil
         tab.ElementsPerRow = options.ElementsPerRow or 1
         tab.ElementCount = 0
         
-        -- Conteúdo da aba
         tab.Content = Instance.new("ScrollingFrame")
         tab.Content.Size = UDim2.new(1, -160, 1, -50)
         tab.Content.Position = UDim2.new(0, 155, 0, 45)
         tab.Content.BackgroundTransparency = 1
         tab.Content.ScrollBarThickness = 5
+        tab.Content.CanvasPosition = Vector2.new(0, 0)
         tab.Content.Visible = false
         tab.Content.Parent = window.MainFrame
         
-        -- Botão da aba (vertical, estilo Fluent)
         tab.Button = Instance.new("TextButton")
         tab.Button.Size = UDim2.new(1, -10, 0, 40)
         tab.Button.Position = UDim2.new(0, 5, 0, #window.Tabs * 45 + 5)
@@ -249,38 +281,47 @@ function RainLib:Window(options)
             text.TextXAlignment = Enum.TextXAlignment.Left
             text.Parent = tab.Button
         else
-            tab.Button.TextXAlignment = Enum.TextXAlignment.Left
             tab.Button.Position = UDim2.new(0, 15, 0, #window.Tabs * 45 + 5)
         end
         
-        local indicator = Instance.new("Frame")
-        indicator.Size = UDim2.new(0, 3, 1, 0)
-        indicator.Position = UDim2.new(0, 0, 0, 0)
-        indicator.BackgroundColor3 = RainLib.CurrentTheme.Accent
-        indicator.Visible = false
-        indicator.Name = "Indicator"
-        indicator.Parent = tab.Button
-        
         table.insert(window.Tabs, tab)
         
-        local function selectTab()
-            for _, t in pairs(window.Tabs) do
-                t.Content.Visible = false
-                for _, child in pairs(t.Button:GetChildren()) do
-                    if child.Name == "Indicator" then
-                        child.Visible = false
-                    end
+        local function selectTab(index)
+            for i, t in pairs(window.Tabs) do
+                if i == index then
+                    t.Content.Visible = true
+                    tween(t.Content, TweenInfo.new(0.2), {BackgroundTransparency = 1})
+                    tween(window.TabIndicator, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, (i-1) * 45 + 5)})
+                    window.CurrentTabIndex = i
+                    print("[RainLib] Aba selecionada: " .. t.Name)
+                else
+                    tween(t.Content, TweenInfo.new(0.2), {BackgroundTransparency = 1})
+                    task.delay(0.2, function() t.Content.Visible = false end)
                 end
             end
-            tab.Content.Visible = true
-            indicator.Visible = true
-            print("[RainLib] Aba selecionada: " .. tab.Name)
         end
         
-        tab.Button.MouseButton1Click:Connect(selectTab)
-        if #window.Tabs == 1 then selectTab() end
+        tab.Button.MouseButton1Click:Connect(function()
+            local index = table.find(window.Tabs, tab)
+            selectTab(index)
+        end)
         
-        -- Função pra posicionamento dinâmico
+        if #window.Tabs == 1 then
+            selectTab(1)
+        end
+        
+        window.NavUp.MouseButton1Click:Connect(function()
+            if window.CurrentTabIndex > 1 then
+                selectTab(window.CurrentTabIndex - 1)
+            end
+        end)
+        
+        window.NavDown.MouseButton1Click:Connect(function()
+            if window.CurrentTabIndex < #window.Tabs then
+                selectTab(window.CurrentTabIndex + 1)
+            end
+        end)
+        
         local function getNextPosition(elementSize)
             local row = math.floor(tab.ElementCount / tab.ElementsPerRow)
             local col = tab.ElementCount % tab.ElementsPerRow
@@ -477,7 +518,8 @@ function RainLib:Window(options)
             label.Size = UDim2.new(1, -30, 1, 0)
             label.Text = dropdown.Value
             label.BackgroundTransparency = 1
-            label.TextColor3 = RainLib.CurrentTheme.Text
+            label.Text :)
+Color3 = RainLib.CurrentTheme.Text
             label.Font = Enum.Font.SourceSans
             label.TextSize = 16
             label.Parent = frame
@@ -540,7 +582,6 @@ function RainLib:Window(options)
     return window
 end
 
--- Sistema de notificações
 function RainLib:Notify(options)
     print("[RainLib] Criando notificação...")
     local success, err = pcall(function()
@@ -587,7 +628,6 @@ function RainLib:Notify(options)
     end
 end
 
--- Mudar tema
 function RainLib:SetTheme(theme)
     print("[RainLib] Mudando tema...")
     local success, err = pcall(function()
@@ -597,12 +637,15 @@ function RainLib:SetTheme(theme)
             window.TitleBar.BackgroundColor3 = theme.Secondary
             window.TitleLabel.TextColor3 = theme.Text
             window.TabContainer.BackgroundColor3 = theme.Secondary
+            window.TabIndicator.BackgroundColor3 = theme.Accent
+            window.NavUp.BackgroundColor3 = theme.Accent
+            window.NavUp.TextColor3 = theme.Text
+            window.NavDown.BackgroundColor3 = theme.Accent
+            window.NavDown.TextColor3 = theme.Text
             for _, tab in pairs(window.Tabs) do
                 tab.Button.TextColor3 = theme.Text
                 for _, child in pairs(tab.Button:GetChildren()) do
-                    if child.Name == "Indicator" then
-                        child.BackgroundColor3 = theme.Accent
-                    elseif child:IsA("TextLabel") then
+                    if child:IsA("TextLabel") then
                         child.TextColor3 = theme.Text
                     end
                 end
