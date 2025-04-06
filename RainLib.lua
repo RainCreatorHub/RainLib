@@ -1,5 +1,5 @@
 local RainLib = {
-    Version = "1.0.3",
+    Version = "1.0.4",
     Themes = {
         Dark = {
             Background = Color3.fromRGB(30, 30, 30),
@@ -182,6 +182,7 @@ function RainLib:Window(options)
     window.Minimized = false
     window.Tabs = {}
     window.CurrentTabIndex = 1
+    window.MinimizeButton = nil
     
     local success, err = pcall(function()
         window.MainFrame = Instance.new("Frame")
@@ -249,34 +250,6 @@ function RainLib:Window(options)
         window.TabIndicator.BackgroundColor3 = RainLib.CurrentTheme.Accent
         window.TabIndicator.Position = UDim2.new(0, 0, 0, 5)
         window.TabIndicator.Parent = window.TabContainer
-        
-        window.NavUp = Instance.new("TextButton")
-        window.NavUp.Size = UDim2.new(0, 30, 0, 30)
-        window.NavUp.Position = UDim2.new(0, 110, 0, 5)
-        window.NavUp.BackgroundColor3 = RainLib.CurrentTheme.Accent
-        window.NavUp.Text = "↑"
-        window.NavUp.TextColor3 = RainLib.CurrentTheme.Text
-        window.NavUp.Font = Enum.Font.SourceSansBold
-        window.NavUp.TextSize = 16
-        window.NavUp.Parent = window.TitleBar
-        
-        window.NavDown = Instance.new("TextButton")
-        window.NavDown.Size = UDim2.new(0, 30, 0, 30)
-        window.NavDown.Position = UDim2.new(0, 145, 0, 5)
-        window.NavDown.BackgroundColor3 = RainLib.CurrentTheme.Accent
-        window.NavDown.Text = "↓"
-        window.NavDown.TextColor3 = RainLib.CurrentTheme.Text
-        window.NavDown.Font = Enum.Font.SourceSansBold
-        window.NavDown.TextSize = 16
-        window.NavDown.Parent = window.TitleBar
-        
-        local navCornerUp = Instance.new("UICorner")
-        navCornerUp.CornerRadius = UDim.new(0, 5)
-        navCornerUp.Parent = window.NavUp
-        
-        local navCornerDown = Instance.new("UICorner")
-        navCornerDown.CornerRadius = UDim.new(0, 5)
-        navCornerDown.Parent = window.NavDown
     end)
     if not success then
         warn("[RainLib] Erro ao criar janela: " .. err)
@@ -285,8 +258,13 @@ function RainLib:Window(options)
     print("[RainLib] Janela criada!")
     
     window.CloseButton.MouseButton1Click:Connect(function()
-        window.MainFrame.Visible = false
-        print("[RainLib] Janela fechada")
+        if window.MinimizeButton then
+            window.MinimizeButton:Destroy()
+            window.MinimizeButton = nil
+            print("[RainLib] Botão de minimizar destruído")
+        end
+        window.MainFrame:Destroy()
+        print("[RainLib] Janela destruída")
     end)
     
     local dragging, dragStart, startPos
@@ -321,35 +299,49 @@ function RainLib:Window(options)
     function window:Minimize(options)
         print("[RainLib] Criando botão de minimizar...")
         options = options or {}
-        local button = Instance.new("TextButton")
-        button.Size = UDim2.new(0, 100, 0, 30)
+        local button
+        local isImage = options.Text1 and options.Text1:match("^rbxassetid://") or options.Text2 and options.Text2:match("^rbxassetid://")
+        
+        if isImage then
+            button = Instance.new("ImageButton")
+            button.Image = options.Text1 or "rbxassetid://10734966248" -- Default: "star"
+        else
+            button = Instance.new("TextButton")
+            button.Text = options.Text1 or "Open"
+            button.Font = Enum.Font.SourceSansBold
+            button.TextSize = 16
+            button.TextColor3 = RainLib.CurrentTheme.Text
+        end
+        
+        local format = options.Format or "rectangle"
+        if format == "circle" then
+            button.Size = UDim2.new(0, 40, 0, 40)
+        elseif format == "square" then
+            button.Size = UDim2.new(0, 50, 0, 50)
+        else -- rectangle
+            button.Size = UDim2.new(0, 100, 0, 30)
+        end
+        
         button.Position = options.Position or UDim2.new(0, 10, 0, 10)
-        button.Text = options.Text or "Minimize"
         button.BackgroundColor3 = RainLib.CurrentTheme.Accent
-        button.TextColor3 = RainLib.CurrentTheme.Text
-        button.Font = Enum.Font.SourceSansBold
-        button.TextSize = 16
         button.BackgroundTransparency = options.BackgroundTransparency or 0
         button.Parent = RainLib.ScreenGui
         
         local corner = Instance.new("UICorner")
-        corner.CornerRadius = options.CornerRadius or UDim.new(0, 8)
+        corner.CornerRadius = format == "circle" and UDim.new(0.5, 0) or UDim.new(0, 8)
         corner.Parent = button
         
         button.MouseButton1Click:Connect(function()
-            if window.Minimized then
-                tween(window.MainFrame, nil, {Size = window.Size, Position = window.Position})
-                window.Minimized = false
-                button.Text = options.Text or "Minimize"
-                print("[RainLib] Janela restaurada")
+            window.MainFrame.Visible = not window.MainFrame.Visible
+            if isImage then
+                button.Image = window.MainFrame.Visible and (options.Text1 or "rbxassetid://10734966248") or (options.Text2 or "rbxassetid://10747384394") -- Default: "x"
             else
-                tween(window.MainFrame, nil, {Size = UDim2.new(0, window.Size.X.Offset, 0, 40), Position = UDim2.new(window.Position.X.Scale, window.Position.X.Offset, 1, -50)})
-                window.Minimized = true
-                button.Text = "Restore"
-                print("[RainLib] Janela minimizada")
+                button.Text = window.MainFrame.Visible and (options.Text1 or "Open") or (options.Text2 or "Close")
             end
+            print("[RainLib] GUI " .. (window.MainFrame.Visible and "aberto" or "fechado"))
         end)
         
+        window.MinimizeButton = button
         return button
     end
     
@@ -388,7 +380,7 @@ function RainLib:Window(options)
             icon.Size = UDim2.new(0, 24, 0, 24)
             icon.Position = UDim2.new(0, 5, 0.5, -12)
             icon.BackgroundTransparency = 1
-            icon.Image = RainLib.Icons[tab.Icon] or tab.Icon -- Usa a tabela de ícones ou ID direto
+            icon.Image = RainLib.Icons[tab.Icon] or tab.Icon
             icon.Parent = tab.Button
             
             local text = Instance.new("TextLabel")
@@ -430,18 +422,6 @@ function RainLib:Window(options)
         if #window.Tabs == 1 then
             selectTab(1)
         end
-        
-        window.NavUp.MouseButton1Click:Connect(function()
-            if window.CurrentTabIndex > 1 then
-                selectTab(window.CurrentTabIndex - 1)
-            end
-        end)
-        
-        window.NavDown.MouseButton1Click:Connect(function()
-            if window.CurrentTabIndex < #window.Tabs then
-                selectTab(window.CurrentTabIndex + 1)
-            end
-        end)
         
         local function getNextPosition(elementSize)
             local row = math.floor(tab.ElementCount / tab.ElementsPerRow)
@@ -758,12 +738,10 @@ function RainLib:SetTheme(theme)
             window.TitleLabel.TextColor3 = theme.Text
             window.TabContainer.BackgroundColor3 = theme.Secondary
             window.TabIndicator.BackgroundColor3 = theme.Accent
-            window.NavUp.BackgroundColor3 = theme.Accent
-            window.NavUp.TextColor3 = theme.Text
-            window.NavDown.BackgroundColor3 = theme.Accent
-            window.NavDown.TextColor3 = theme.Text
             for _, tab in pairs(window.Tabs) do
                 tab.Button.TextColor3 = theme.Text
+                tab.Content.BackgroundColor3 = theme.Background
+                tab.Content.UIStroke.Color = theme.Accent
                 for _, child in pairs(tab.Button:GetChildren()) do
                     if child:IsA("TextLabel") then
                         child.TextColor3 = theme.Text
