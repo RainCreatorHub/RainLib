@@ -13,6 +13,8 @@ local RainLib = {
     CurrentTheme = nil
 }
 
+print("[RainLib] Carregando serviços...")
+
 -- Serviços do Roblox
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -26,28 +28,30 @@ local function tween(obj, info, properties)
 end
 
 -- Inicialização automática
-do
-    local success, err = pcall(function()
-        RainLib.ScreenGui = Instance.new("ScreenGui")
-        RainLib.ScreenGui.Name = "RainLib"
-        RainLib.ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-        RainLib.ScreenGui.ResetOnSpawn = false
-        RainLib.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-        
-        RainLib.CurrentTheme = RainLib.Themes.Dark
-        RainLib.Notifications = Instance.new("Frame")
-        RainLib.Notifications.Size = UDim2.new(0, 300, 1, 0)
-        RainLib.Notifications.Position = UDim2.new(1, -310, 0, 0)
-        RainLib.Notifications.BackgroundTransparency = 1
-        RainLib.Notifications.Parent = RainLib.ScreenGui
-    end)
-    if not success then
-        warn("Erro ao inicializar RainLib: " .. err)
-    end
+print("[RainLib] Inicializando...")
+local success, err = pcall(function()
+    RainLib.ScreenGui = Instance.new("ScreenGui")
+    RainLib.ScreenGui.Name = "RainLib"
+    RainLib.ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui", 5)
+    RainLib.ScreenGui.ResetOnSpawn = false
+    RainLib.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    RainLib.CurrentTheme = RainLib.Themes.Dark
+    RainLib.Notifications = Instance.new("Frame")
+    RainLib.Notifications.Size = UDim2.new(0, 300, 1, 0)
+    RainLib.Notifications.Position = UDim2.new(1, -310, 0, 0)
+    RainLib.Notifications.BackgroundTransparency = 1
+    RainLib.Notifications.Parent = RainLib.ScreenGui
+end)
+if not success then
+    warn("[RainLib] Erro na inicialização: " .. err)
+    return nil
 end
+print("[RainLib] Inicializado com sucesso!")
 
 -- Criar uma janela
 function RainLib:Window(options)
+    print("[RainLib] Criando janela...")
     local window = {}
     options = options or {}
     
@@ -111,12 +115,14 @@ function RainLib:Window(options)
         closeCorner.Parent = window.CloseButton
     end)
     if not success then
-        warn("Erro ao criar janela: " .. err)
+        warn("[RainLib] Erro ao criar janela: " .. err)
         return nil
     end
+    print("[RainLib] Janela criada!")
     
     window.CloseButton.MouseButton1Click:Connect(function()
         window.MainFrame.Visible = false
+        print("[RainLib] Janela fechada")
     end)
     
     -- Tornar arrastável
@@ -126,6 +132,7 @@ function RainLib:Window(options)
             dragging = true
             dragStart = input.Position
             startPos = window.MainFrame.Position
+            print("[RainLib] Começando a arrastar")
         end
     end)
     
@@ -144,11 +151,13 @@ function RainLib:Window(options)
     window.TitleBar.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = false
+            print("[RainLib] Parou de arrastar")
         end
     end)
     
     -- Funções da janela
     function window:Minimize(options)
+        print("[RainLib] Criando botão de minimizar...")
         options = options or {}
         local button = Instance.new("TextButton")
         button.Size = UDim2.new(0, 100, 0, 30)
@@ -170,10 +179,12 @@ function RainLib:Window(options)
                 tween(window.MainFrame, nil, {Size = window.Size, Position = window.Position})
                 window.Minimized = false
                 button.Text = options.Text or "Minimize"
+                print("[RainLib] Janela restaurada")
             else
                 tween(window.MainFrame, nil, {Size = UDim2.new(0, window.Size.X.Offset, 0, 40), Position = UDim2.new(window.Position.X.Scale, window.Position.X.Offset, 1, -50)})
                 window.Minimized = true
                 button.Text = "Restore"
+                print("[RainLib] Janela minimizada")
             end
         end)
         
@@ -181,6 +192,7 @@ function RainLib:Window(options)
     end
     
     function window:Tab(options)
+        print("[RainLib] Criando aba...")
         local tab = {}
         options = options or {}
         tab.Name = options.Name or "Tab"
@@ -224,6 +236,7 @@ function RainLib:Window(options)
             end
             tab.Button.BackgroundColor3 = RainLib.CurrentTheme.Accent
             tab.Content.Visible = true
+            print("[RainLib] Aba selecionada: " .. tab.Name)
         end
         
         tab.Button.MouseButton1Click:Connect(selectTab)
@@ -368,13 +381,13 @@ function RainLib:Window(options)
             
             local dragging
             bar.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     dragging = true
                 end
             end)
             
             bar.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     dragging = false
                 end
             end)
@@ -459,7 +472,7 @@ function RainLib:Window(options)
             end
             
             frame.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     list.Visible = not list.Visible
                 end
             end)
@@ -476,6 +489,7 @@ end
 
 -- Sistema de notificações
 function RainLib:Notify(options)
+    print("[RainLib] Criando notificação...")
     local success, err = pcall(function()
         local notification = Instance.new("Frame")
         notification.Size = UDim2.new(0, 280, 0, 80)
@@ -512,15 +526,17 @@ function RainLib:Notify(options)
         task.wait(options.Duration or 3)
         tween(notification, TweenInfo.new(0.5), {Position = UDim2.new(1, 10, 0, notification.Position.Y.Offset)}).Completed:Connect(function()
             notification:Destroy()
+            print("[RainLib] Notificação removida")
         end)
     end)
     if not success then
-        warn("Erro ao criar notificação: " .. err)
+        warn("[RainLib] Erro na notificação: " .. err)
     end
 end
 
 -- Mudar tema
 function RainLib:SetTheme(theme)
+    print("[RainLib] Mudando tema...")
     local success, err = pcall(function()
         RainLib.CurrentTheme = theme
         for _, window in pairs(RainLib.Windows) do
@@ -548,8 +564,11 @@ function RainLib:SetTheme(theme)
         end
     end)
     if not success then
-        warn("Erro ao mudar tema: " .. err)
+        warn("[RainLib] Erro ao mudar tema: " .. err)
+    else
+        print("[RainLib] Tema mudado com sucesso!")
     end
 end
 
+print("[RainLib] Biblioteca carregada!")
 return RainLib
