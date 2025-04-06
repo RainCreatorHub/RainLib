@@ -1,5 +1,5 @@
 local RainLib = {
-    Version = "1.0.0",
+    Version = "1.1.0",
     Themes = {
         Dark = {
             Background = Color3.fromRGB(30, 30, 30),
@@ -125,10 +125,9 @@ function RainLib:Window(options)
         print("[RainLib] Janela fechada")
     end)
     
-    -- Tornar arrastável
     local dragging, dragStart, startPos
     window.TitleBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
             startPos = window.MainFrame.Position
@@ -137,7 +136,7 @@ function RainLib:Window(options)
     end)
     
     window.TitleBar.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local delta = input.Position - dragStart
             window.MainFrame.Position = UDim2.new(
                 startPos.X.Scale,
@@ -149,13 +148,12 @@ function RainLib:Window(options)
     end)
     
     window.TitleBar.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = false
             print("[RainLib] Parou de arrastar")
         end
     end)
     
-    -- Funções da janela
     function window:Minimize(options)
         print("[RainLib] Criando botão de minimizar...")
         options = options or {}
@@ -196,6 +194,9 @@ function RainLib:Window(options)
         local tab = {}
         options = options or {}
         tab.Name = options.Name or "Tab"
+        tab.Columns = options.Columns or 1 -- Número de colunas (padrão 1, pra suportar múltiplos elementos)
+        tab.ElementsPerRow = options.ElementsPerRow or tab.Columns -- Quantos elementos por linha
+        tab.ElementCount = 0 -- Contador de elementos pra layout dinâmico
         
         tab.Content = Instance.new("ScrollingFrame")
         tab.Content.Size = UDim2.new(1, -10, 1, -50)
@@ -242,10 +243,21 @@ function RainLib:Window(options)
         tab.Button.MouseButton1Click:Connect(selectTab)
         if #window.Tabs == 1 then selectTab() end
         
+        -- Função pra calcular posição dinâmica
+        local function getNextPosition(elementSize)
+            local row = math.floor(tab.ElementCount / tab.ElementsPerRow)
+            local col = tab.ElementCount % tab.ElementsPerRow
+            local xOffset = 10 + col * (elementSize.X.Offset + 10)
+            local yOffset = 10 + row * (elementSize.Y.Offset + 10)
+            tab.ElementCount = tab.ElementCount + 1
+            return UDim2.new(0, xOffset, 0, yOffset)
+        end
+        
         function tab:Button(options)
+            local buttonSize = options.Size or UDim2.new(0, 100, 0, 30)
             local button = Instance.new("TextButton")
-            button.Size = options.Size or UDim2.new(0, 100, 0, 30)
-            button.Position = UDim2.new(0, 10, 0, (#tab.Content:GetChildren() - 1) * 40 + 10)
+            button.Size = buttonSize
+            button.Position = getNextPosition(buttonSize)
             button.Text = options.Text or "Button"
             button.BackgroundColor3 = options.BackgroundColor3 or RainLib.CurrentTheme.Accent
             button.TextColor3 = RainLib.CurrentTheme.Text
@@ -262,9 +274,10 @@ function RainLib:Window(options)
         end
         
         function tab:Textbox(options)
+            local textboxSize = options.Size or UDim2.new(0, 100, 0, 30)
             local textbox = Instance.new("TextBox")
-            textbox.Size = options.Size or UDim2.new(0, 100, 0, 30)
-            textbox.Position = UDim2.new(0, 10, 0, (#tab.Content:GetChildren() - 1) * 40 + 10)
+            textbox.Size = textboxSize
+            textbox.Position = getNextPosition(textboxSize)
             textbox.Text = options.Text or ""
             textbox.BackgroundColor3 = options.BackgroundColor3 or RainLib.CurrentTheme.Secondary
             textbox.TextColor3 = RainLib.CurrentTheme.Text
@@ -286,10 +299,11 @@ function RainLib:Window(options)
         end
         
         function tab:Toggle(options)
+            local toggleSize = options.Size or UDim2.new(0, 100, 0, 30)
             local toggle = { Value = options.Default or false }
             local frame = Instance.new("Frame")
-            frame.Size = options.Size or UDim2.new(0, 100, 0, 30)
-            frame.Position = UDim2.new(0, 10, 0, (#tab.Content:GetChildren() - 1) * 40 + 10)
+            frame.Size = toggleSize
+            frame.Position = getNextPosition(toggleSize)
             frame.BackgroundColor3 = RainLib.CurrentTheme.Secondary
             frame.Parent = tab.Content
             
@@ -317,7 +331,7 @@ function RainLib:Window(options)
             indicatorCorner.Parent = indicator
             
             frame.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     toggle.Value = not toggle.Value
                     tween(indicator, TweenInfo.new(0.2), {BackgroundColor3 = toggle.Value and RainLib.CurrentTheme.Accent or RainLib.CurrentTheme.Disabled})
                     if options.Callback then
@@ -330,10 +344,11 @@ function RainLib:Window(options)
         end
         
         function tab:Slider(options)
+            local sliderSize = options.Size or UDim2.new(0, 200, 0, 40)
             local slider = { Value = options.Default or 0 }
             local frame = Instance.new("Frame")
-            frame.Size = options.Size or UDim2.new(0, 200, 0, 40)
-            frame.Position = UDim2.new(0, 10, 0, (#tab.Content:GetChildren() - 1) * 40 + 10)
+            frame.Size = sliderSize
+            frame.Position = getNextPosition(sliderSize)
             frame.BackgroundColor3 = RainLib.CurrentTheme.Secondary
             frame.Parent = tab.Content
             
