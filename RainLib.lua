@@ -56,7 +56,7 @@ function RainLib:Window(options)
     window.Position = options.Position or UDim2.new(0.5, -250, 0.5, -175)
     window.Minimized = false
     window.Tabs = {}
-    window.CurrentTabIndex = 1 -- Índice da aba ativa
+    window.CurrentTabIndex = 1
     
     local success, err = pcall(function()
         window.MainFrame = Instance.new("Frame")
@@ -111,7 +111,6 @@ function RainLib:Window(options)
         closeCorner.CornerRadius = UDim.new(0, 8)
         closeCorner.Parent = window.CloseButton
         
-        -- Container de abas
         window.TabContainer = Instance.new("ScrollingFrame")
         window.TabContainer.Size = UDim2.new(0, 150, 1, -40)
         window.TabContainer.Position = UDim2.new(0, 0, 0, 40)
@@ -120,14 +119,12 @@ function RainLib:Window(options)
         window.TabContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
         window.TabContainer.Parent = window.MainFrame
         
-        -- Indicador animado
         window.TabIndicator = Instance.new("Frame")
         window.TabIndicator.Size = UDim2.new(0, 3, 0, 40)
         window.TabIndicator.BackgroundColor3 = RainLib.CurrentTheme.Accent
         window.TabIndicator.Position = UDim2.new(0, 0, 0, 5)
         window.TabIndicator.Parent = window.TabContainer
         
-        -- Botões de navegação
         window.NavUp = Instance.new("TextButton")
         window.NavUp.Size = UDim2.new(0, 30, 0, 30)
         window.NavUp.Position = UDim2.new(0, 110, 0, 5)
@@ -231,7 +228,6 @@ function RainLib:Window(options)
         return button
     end
     
-    -- Sistema de abas bonito e funcional
     function window:Tab(options)
         print("[RainLib] Criando aba...")
         local tab = {}
@@ -518,8 +514,7 @@ function RainLib:Window(options)
             label.Size = UDim2.new(1, -30, 1, 0)
             label.Text = dropdown.Value
             label.BackgroundTransparency = 1
-            label.Text :)
-Color3 = RainLib.CurrentTheme.Text
+            label.TextColor3 = RainLib.CurrentTheme.Text
             label.Font = Enum.Font.SourceSans
             label.TextSize = 16
             label.Parent = frame
