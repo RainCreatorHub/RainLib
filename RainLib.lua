@@ -25,23 +25,28 @@ local function tween(obj, info, properties)
     return tween
 end
 
--- Inicialização automática como Fluent
+-- Inicialização automática
 do
-    RainLib.ScreenGui = Instance.new("ScreenGui")
-    RainLib.ScreenGui.Name = "RainLib"
-    RainLib.ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-    RainLib.ScreenGui.ResetOnSpawn = false
-    RainLib.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    
-    RainLib.CurrentTheme = RainLib.Themes.Dark
-    RainLib.Notifications = Instance.new("Frame")
-    RainLib.Notifications.Size = UDim2.new(0, 300, 1, 0)
-    RainLib.Notifications.Position = UDim2.new(1, -310, 0, 0)
-    RainLib.Notifications.BackgroundTransparency = 1
-    RainLib.Notifications.Parent = RainLib.ScreenGui
+    local success, err = pcall(function()
+        RainLib.ScreenGui = Instance.new("ScreenGui")
+        RainLib.ScreenGui.Name = "RainLib"
+        RainLib.ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+        RainLib.ScreenGui.ResetOnSpawn = false
+        RainLib.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        
+        RainLib.CurrentTheme = RainLib.Themes.Dark
+        RainLib.Notifications = Instance.new("Frame")
+        RainLib.Notifications.Size = UDim2.new(0, 300, 1, 0)
+        RainLib.Notifications.Position = UDim2.new(1, -310, 0, 0)
+        RainLib.Notifications.BackgroundTransparency = 1
+        RainLib.Notifications.Parent = RainLib.ScreenGui
+    end)
+    if not success then
+        warn("Erro ao inicializar RainLib: " .. err)
+    end
 end
 
--- Criar uma janela (igual Fluent)
+-- Criar uma janela
 function RainLib:Window(options)
     local window = {}
     options = options or {}
@@ -52,63 +57,69 @@ function RainLib:Window(options)
     window.Minimized = false
     window.Tabs = {}
     
-    window.MainFrame = Instance.new("Frame")
-    window.MainFrame.Size = window.Size
-    window.MainFrame.Position = window.Position
-    window.MainFrame.BackgroundColor3 = RainLib.CurrentTheme.Background
-    window.MainFrame.ClipsDescendants = true
-    window.MainFrame.Parent = RainLib.ScreenGui
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 10)
-    corner.Parent = window.MainFrame
-    
-    local shadow = Instance.new("ImageLabel")
-    shadow.Size = UDim2.new(1, 20, 1, 20)
-    shadow.Position = UDim2.new(0, -10, 0, -10)
-    shadow.BackgroundTransparency = 1
-    shadow.Image = "rbxassetid://1316045217"
-    shadow.ImageTransparency = 0.7
-    shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-    shadow.ScaleType = Enum.ScaleType.Slice
-    shadow.SliceCenter = Rect.new(10, 10, 118, 118)
-    shadow.Parent = window.MainFrame
-    
-    window.TitleBar = Instance.new("Frame")
-    window.TitleBar.Size = UDim2.new(1, 0, 0, 40)
-    window.TitleBar.BackgroundTransparency = 1
-    window.TitleBar.Parent = window.MainFrame
-    
-    window.TitleLabel = Instance.new("TextLabel")
-    window.TitleLabel.Size = UDim2.new(1, -40, 1, 0)
-    window.TitleLabel.Position = UDim2.new(0, 10, 0, 0)
-    window.TitleLabel.BackgroundTransparency = 1
-    window.TitleLabel.Text = window.Title
-    window.TitleLabel.TextColor3 = RainLib.CurrentTheme.Text
-    window.TitleLabel.Font = Enum.Font.GothamBold
-    window.TitleLabel.TextSize = 20
-    window.TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    window.TitleLabel.Parent = window.TitleBar
-    
-    window.CloseButton = Instance.new("TextButton")
-    window.CloseButton.Size = UDim2.new(0, 30, 0, 30)
-    window.CloseButton.Position = UDim2.new(1, -35, 0, 5)
-    window.CloseButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-    window.CloseButton.Text = "X"
-    window.CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    window.CloseButton.Font = Enum.Font.SourceSansBold
-    window.CloseButton.TextSize = 16
-    window.CloseButton.Parent = window.TitleBar
-    
-    local closeCorner = Instance.new("UICorner")
-    closeCorner.CornerRadius = UDim.new(0, 8)
-    closeCorner.Parent = window.CloseButton
+    local success, err = pcall(function()
+        window.MainFrame = Instance.new("Frame")
+        window.MainFrame.Size = window.Size
+        window.MainFrame.Position = window.Position
+        window.MainFrame.BackgroundColor3 = RainLib.CurrentTheme.Background
+        window.MainFrame.ClipsDescendants = true
+        window.MainFrame.Parent = RainLib.ScreenGui
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 10)
+        corner.Parent = window.MainFrame
+        
+        local shadow = Instance.new("ImageLabel")
+        shadow.Size = UDim2.new(1, 20, 1, 20)
+        shadow.Position = UDim2.new(0, -10, 0, -10)
+        shadow.BackgroundTransparency = 1
+        shadow.Image = "rbxassetid://1316045217"
+        shadow.ImageTransparency = 0.7
+        shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+        shadow.ScaleType = Enum.ScaleType.Slice
+        shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+        shadow.Parent = window.MainFrame
+        
+        window.TitleBar = Instance.new("Frame")
+        window.TitleBar.Size = UDim2.new(1, 0, 0, 40)
+        window.TitleBar.BackgroundTransparency = 1
+        window.TitleBar.Parent = window.MainFrame
+        
+        window.TitleLabel = Instance.new("TextLabel")
+        window.TitleLabel.Size = UDim2.new(1, -40, 1, 0)
+        window.TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+        window.TitleLabel.BackgroundTransparency = 1
+        window.TitleLabel.Text = window.Title
+        window.TitleLabel.TextColor3 = RainLib.CurrentTheme.Text
+        window.TitleLabel.Font = Enum.Font.GothamBold
+        window.TitleLabel.TextSize = 20
+        window.TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        window.TitleLabel.Parent = window.TitleBar
+        
+        window.CloseButton = Instance.new("TextButton")
+        window.CloseButton.Size = UDim2.new(0, 30, 0, 30)
+        window.CloseButton.Position = UDim2.new(1, -35, 0, 5)
+        window.CloseButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        window.CloseButton.Text = "X"
+        window.CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        window.CloseButton.Font = Enum.Font.SourceSansBold
+        window.CloseButton.TextSize = 16
+        window.CloseButton.Parent = window.TitleBar
+        
+        local closeCorner = Instance.new("UICorner")
+        closeCorner.CornerRadius = UDim.new(0, 8)
+        closeCorner.Parent = window.CloseButton
+    end)
+    if not success then
+        warn("Erro ao criar janela: " .. err)
+        return nil
+    end
     
     window.CloseButton.MouseButton1Click:Connect(function()
         window.MainFrame.Visible = false
     end)
     
-    -- Tornar arrastável (igual Fluent)
+    -- Tornar arrastável
     local dragging, dragStart, startPos
     window.TitleBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -136,7 +147,7 @@ function RainLib:Window(options)
         end
     end)
     
-    -- Funções da janela (igual Fluent)
+    -- Funções da janela
     function window:Minimize(options)
         options = options or {}
         local button = Instance.new("TextButton")
@@ -218,7 +229,6 @@ function RainLib:Window(options)
         tab.Button.MouseButton1Click:Connect(selectTab)
         if #window.Tabs == 1 then selectTab() end
         
-        -- Métodos da aba (igual Fluent)
         function tab:Button(options)
             local button = Instance.new("TextButton")
             button.Size = options.Size or UDim2.new(0, 100, 0, 30)
@@ -464,71 +474,81 @@ function RainLib:Window(options)
     return window
 end
 
--- Sistema de notificações (extra além do Fluent)
+-- Sistema de notificações
 function RainLib:Notify(options)
-    local notification = Instance.new("Frame")
-    notification.Size = UDim2.new(0, 280, 0, 80)
-    notification.Position = UDim2.new(0, 10, 0, (#RainLib.Notifications:GetChildren() - 1) * 90 + 10)
-    notification.BackgroundColor3 = RainLib.CurrentTheme.Background
-    notification.Parent = RainLib.Notifications
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = notification
-    
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, -10, 0, 20)
-    title.Position = UDim2.new(0, 5, 0, 5)
-    title.Text = options.Title or "Notification"
-    title.BackgroundTransparency = 1
-    title.TextColor3 = RainLib.CurrentTheme.Text
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 16
-    title.Parent = notification
-    
-    local message = Instance.new("TextLabel")
-    message.Size = UDim2.new(1, -10, 0, 40)
-    message.Position = UDim2.new(0, 5, 0, 30)
-    message.Text = options.Message or "Message"
-    message.BackgroundTransparency = 1
-    message.TextColor3 = RainLib.CurrentTheme.Text
-    message.Font = Enum.Font.SourceSans
-    message.TextSize = 14
-    message.TextWrapped = true
-    message.Parent = notification
-    
-    tween(notification, TweenInfo.new(0.5), {Position = UDim2.new(0, 10, 0, (#RainLib.Notifications:GetChildren() - 1) * 90 + 10)})
-    task.wait(options.Duration or 3)
-    tween(notification, TweenInfo.new(0.5), {Position = UDim2.new(1, 10, 0, notification.Position.Y.Offset)}).Completed:Connect(function()
-        notification:Destroy()
+    local success, err = pcall(function()
+        local notification = Instance.new("Frame")
+        notification.Size = UDim2.new(0, 280, 0, 80)
+        notification.Position = UDim2.new(0, 10, 0, (#RainLib.Notifications:GetChildren() - 1) * 90 + 10)
+        notification.BackgroundColor3 = RainLib.CurrentTheme.Background
+        notification.Parent = RainLib.Notifications
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 8)
+        corner.Parent = notification
+        
+        local title = Instance.new("TextLabel")
+        title.Size = UDim2.new(1, -10, 0, 20)
+        title.Position = UDim2.new(0, 5, 0, 5)
+        title.Text = options.Title or "Notification"
+        title.BackgroundTransparency = 1
+        title.TextColor3 = RainLib.CurrentTheme.Text
+        title.Font = Enum.Font.GothamBold
+        title.TextSize = 16
+        title.Parent = notification
+        
+        local message = Instance.new("TextLabel")
+        message.Size = UDim2.new(1, -10, 0, 40)
+        message.Position = UDim2.new(0, 5, 0, 30)
+        message.Text = options.Message or "Message"
+        message.BackgroundTransparency = 1
+        message.TextColor3 = RainLib.CurrentTheme.Text
+        message.Font = Enum.Font.SourceSans
+        message.TextSize = 14
+        message.TextWrapped = true
+        message.Parent = notification
+        
+        tween(notification, TweenInfo.new(0.5), {Position = UDim2.new(0, 10, 0, (#RainLib.Notifications:GetChildren() - 1) * 90 + 10)})
+        task.wait(options.Duration or 3)
+        tween(notification, TweenInfo.new(0.5), {Position = UDim2.new(1, 10, 0, notification.Position.Y.Offset)}).Completed:Connect(function()
+            notification:Destroy()
+        end)
     end)
+    if not success then
+        warn("Erro ao criar notificação: " .. err)
+    end
 end
 
--- Mudar tema (extra além do Fluent)
+-- Mudar tema
 function RainLib:SetTheme(theme)
-    RainLib.CurrentTheme = theme
-    for _, window in pairs(RainLib.Windows) do
-        window.MainFrame.BackgroundColor3 = theme.Background
-        window.TitleLabel.TextColor3 = theme.Text
-        for _, tab in pairs(window.Tabs) do
-            tab.Button.TextColor3 = theme.Text
-            tab.Button.BackgroundColor3 = tab.Content.Visible and theme.Accent or theme.Secondary
-            for _, child in pairs(tab.Content:GetChildren()) do
-                if child:IsA("TextButton") or child:IsA("TextBox") then
-                    child.BackgroundColor3 = theme.Accent
-                    child.TextColor3 = theme.Text
-                elseif child:IsA("Frame") then
-                    child.BackgroundColor3 = theme.Secondary
-                    for _, subchild in pairs(child:GetChildren()) do
-                        if subchild:IsA("TextLabel") then
-                            subchild.TextColor3 = theme.Text
-                        elseif subchild:IsA("Frame") then
-                            subchild.BackgroundColor3 = subchild.Parent.BackgroundColor3 == theme.Accent and theme.Accent or theme.Disabled
+    local success, err = pcall(function()
+        RainLib.CurrentTheme = theme
+        for _, window in pairs(RainLib.Windows) do
+            window.MainFrame.BackgroundColor3 = theme.Background
+            window.TitleLabel.TextColor3 = theme.Text
+            for _, tab in pairs(window.Tabs) do
+                tab.Button.TextColor3 = theme.Text
+                tab.Button.BackgroundColor3 = tab.Content.Visible and theme.Accent or theme.Secondary
+                for _, child in pairs(tab.Content:GetChildren()) do
+                    if child:IsA("TextButton") or child:IsA("TextBox") then
+                        child.BackgroundColor3 = theme.Accent
+                        child.TextColor3 = theme.Text
+                    elseif child:IsA("Frame") then
+                        child.BackgroundColor3 = theme.Secondary
+                        for _, subchild in pairs(child:GetChildren()) do
+                            if subchild:IsA("TextLabel") then
+                                subchild.TextColor3 = theme.Text
+                            elseif subchild:IsA("Frame") then
+                                subchild.BackgroundColor3 = subchild.Parent.BackgroundColor3 == theme.Accent and theme.Accent or theme.Disabled
+                            end
                         end
                     end
                 end
             end
         end
+    end)
+    if not success then
+        warn("Erro ao mudar tema: " .. err)
     end
 end
 
