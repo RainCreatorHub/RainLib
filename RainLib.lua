@@ -572,7 +572,7 @@ function RainLib:Window(options)
             dragging = true
             dragStart = input.Position
             startPos = window.MainFrame.Position
-            print("[RainLib] Começando a arrastar")
+            print("[RainLib] Começando a arrastar janela")
         end
     end)
     
@@ -591,7 +591,7 @@ function RainLib:Window(options)
     window.TitleBar.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = false
-            print("[RainLib] Parou de arrastar")
+            print("[RainLib] Parou de arrastar janela")
         end
     end)
     
@@ -601,7 +601,7 @@ function RainLib:Window(options)
         local button = Instance.new("TextButton")
         button.Size = UDim2.new(0, 100, 0, 30)
         button.Position = UDim2.new(0, 10, 0, 10) -- Posição fixa
-        button.Text = options.Text or "Toggle UI"
+        button.Text = options.Text1 or "Close" -- Texto inicial quando a janela tá aberta
         button.BackgroundColor3 = RainLib.CurrentTheme.Accent
         button.TextColor3 = RainLib.CurrentTheme.Text
         button.Font = Enum.Font.SourceSansBold
@@ -615,9 +615,40 @@ function RainLib:Window(options)
         
         button.MouseButton1Click:Connect(function()
             window.MainFrame.Visible = not window.MainFrame.Visible
-            button.Text = window.MainFrame.Visible and (options.Text or "Toggle UI") or "Show UI"
+            button.Text = window.MainFrame.Visible and (options.Text1 or "Close") or (options.Text2 or "Open")
             print("[RainLib] GUI " .. (window.MainFrame.Visible and "aberto" or "fechado"))
         end)
+        
+        if options.Draggable then
+            local draggingButton, dragStartButton, startPosButton
+            button.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    draggingButton = true
+                    dragStartButton = input.Position
+                    startPosButton = button.Position
+                    print("[RainLib] Começando a arrastar botão")
+                end
+            end)
+            
+            button.InputChanged:Connect(function(input)
+                if draggingButton and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    local delta = input.Position - dragStartButton
+                    button.Position = UDim2.new(
+                        startPosButton.X.Scale,
+                        startPosButton.X.Offset + delta.X,
+                        startPosButton.Y.Scale,
+                        startPosButton.Y.Offset + delta.Y
+                    )
+                end
+            end)
+            
+            button.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    draggingButton = false
+                    print("[RainLib] Parou de arrastar botão")
+                end
+            end)
+        end
         
         window.MinimizeButton = button
         return button
