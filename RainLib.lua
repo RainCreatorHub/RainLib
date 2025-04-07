@@ -749,20 +749,18 @@ function RainLib:Window(options)
     
     -- Função ajustada para calcular posição com base em ElementsPerRow
     local function getNextPosition(elementSize)
-    local row = tab.ElementCount -- Cada elemento em uma nova linha (ElementsPerRow = 1)
-    local xOffset = 10          -- Margem esquerda fixa
-    local yOffset = 10 + row * (elementSize.Y.Offset + 10) -- Altura acumulada com margem
-    tab.ElementCount = tab.ElementCount + 1
-    
-    -- Ajusta o CanvasSize dinamicamente para o conteúdo vertical
-    tab.Content.CanvasSize = UDim2.new(0, 0, 0, yOffset + elementSize.Y.Offset + 10)
-    return UDim2.new(0, xOffset, 0, yOffset)
-        end
+        local row = math.floor(tab.ElementCount / tab.ElementsPerRow)
+        local col = tab.ElementCount % tab.ElementsPerRow
+        local totalWidth = tab.Container.AbsoluteSize.X - 10 -- Largura disponível menos margens
+        local elementWidth = totalWidth / tab.ElementsPerRow -- Largura por elemento
+        local xOffset = 10 + col * elementWidth
+        local yOffset = 10 + row * (elementSize.Y.Offset + 10)
+        tab.ElementCount = tab.ElementCount + 1
         
         -- Ajusta o CanvasSize dinamicamente
         tab.Content.CanvasSize = UDim2.new(0, 0, 0, yOffset + elementSize.Y.Offset + 10)
         return UDim2.new(0, xOffset, 0, yOffset)
-    end
+        end
     
     function tab:Button(options)
         local buttonSize = options.Size or UDim2.new(0, 100, 0, 30)
