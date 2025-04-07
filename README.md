@@ -15,9 +15,7 @@ local RainLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/RainC
 ```Lua
 local window = RainLib:Window({
     Title = "Rain Lib!",
-    Subtitle = "Rain Lib! sim",
-    SaveConfig = true, -- true ou false
-    ConfigFolder = "ConfigFolder!",
+    Subtitle = "Rain Lib! Yes", -- Sem opção ainda
 })
 ```
 
