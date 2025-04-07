@@ -24,3 +24,26 @@ local RainLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/RainC
     })
 ```
 
+### tab
+
+``` Lua
+local Main = window:Tab({
+   Name = "Main",
+   Icon = "Home",                            ElementsPerRow = 1
+})
+```
+
+### textbox 
+
+``` Lua
+tab:Button({
+    Text = "digite aqui",
+    Size = UDim2.new(1, -20, 0, 30),
+    BackgroundColor3 = Color3.fromRGB(0, 120, 215),
+    Callback = function()
+        print("Botão clicado!")
+    end
+})
+```
+
+
