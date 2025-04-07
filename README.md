@@ -144,10 +144,10 @@ Retorno: Tabela com Value (string).
 
 Notificação, Exiba uma notificação com 
 ``` Lua
-RainLib:Notify.RainLib:Notify({
+RainLib:Notify({
     Title = "Aviso",           -- Título
     Message = "Algo aconteceu!", -- Mensagem
-    Duration = 5               -- Duração (segundos)
+    Duration = 5               -- Duração em segundos
 })
 ```
 
