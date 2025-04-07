@@ -33,6 +33,19 @@ local Main = window:Tab({
 })
 ```
 
+### Checkbox 
+
+``` Lua
+tab:Toggle({
+    Text = "Ativar Recurso",
+    Size = UDim2.new(1, -20, 0, 30),
+    Default = false,
+    Callback = function(value)
+        print("Toggle alterado para: " .. tostring(value))
+    end
+})
+```
+
 ### textbox 
 
 ``` Lua
