@@ -3,13 +3,13 @@ local RainLib = {
     Themes = {
         Dark = {
             Background = Color3.fromRGB(30, 30, 30),
-            Accent = Color3.fromRGB(50, 150, 255),
+            Accent = Color3.fromRGB(50, 150, 255), -- Azul dos elementos e abas selecionadas
             Text = Color3.fromRGB(255, 255, 255),
             Secondary = Color3.fromRGB(50, 50, 50),
             Disabled = Color3.fromRGB(100, 100, 100)
         }
     },
-    Icons = loadstring(game:HttpGet("https://raw.githubusercontent.com/RainCreatorHub/RainLib/refs/heads/main/Icons.lua"))(), -- Importa os ícones
+    Icons = loadstring(game:HttpGet("https://raw.githubusercontent.com/RainCreatorHub/RainLib/main/Icons.lua"))(), -- Importa os ícones
     Windows = {},
     CurrentTheme = nil
 }
@@ -177,8 +177,8 @@ function RainLib:Window(options)
         local success, err = pcall(function()
             button = Instance.new("TextButton")
             button.Size = UDim2.new(0, 100, 0, 30)
-            button.Position = UDim2.new(0, 10, 0, 10) -- Posição fixa
-            button.Text = options.Text1 or "Close" -- Texto inicial
+            button.Position = UDim2.new(0, 10, 0, 10)
+            button.Text = options.Text1 or "Close"
             button.BackgroundColor3 = RainLib.CurrentTheme.Accent
             button.TextColor3 = RainLib.CurrentTheme.Text
             button.Font = Enum.Font.SourceSansBold
@@ -273,7 +273,8 @@ function RainLib:Window(options)
         tab.Button = Instance.new("TextButton")
         tab.Button.Size = UDim2.new(1, -10, 0, 40)
         tab.Button.Position = UDim2.new(0, 5, 0, #window.Tabs * 45 + 5)
-        tab.Button.BackgroundTransparency = 1
+        tab.Button.BackgroundColor3 = RainLib.CurrentTheme.Secondary
+        tab.Button.BackgroundTransparency = 0
         tab.Button.Text = tab.Icon and "" or tab.Name
         tab.Button.TextColor3 = RainLib.CurrentTheme.Text
         tab.Button.Font = Enum.Font.SourceSansBold
@@ -281,6 +282,10 @@ function RainLib:Window(options)
         tab.Button.TextXAlignment = Enum.TextXAlignment.Left
         tab.Button.Parent = window.TabContainer
         window.TabContainer.CanvasSize = UDim2.new(0, 0, 0, #window.Tabs * 45 + 50)
+        
+        local buttonCorner = Instance.new("UICorner")
+        buttonCorner.CornerRadius = UDim.new(0, 8)
+        buttonCorner.Parent = tab.Button
         
         if tab.Icon then
             local icon = Instance.new("ImageLabel")
@@ -312,10 +317,12 @@ function RainLib:Window(options)
                     t.Content.Visible = true
                     tween(t.Content, TweenInfo.new(0.2), {BackgroundTransparency = 1})
                     tween(window.TabIndicator, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, (i-1) * 45 + 5)})
+                    tween(t.Button, TweenInfo.new(0.2), {BackgroundColor3 = RainLib.CurrentTheme.Accent})
                     window.CurrentTabIndex = i
                     print("[RainLib] Aba selecionada: " .. t.Name)
                 else
                     tween(t.Content, TweenInfo.new(0.2), {BackgroundTransparency = 1})
+                    tween(t.Button, TweenInfo.new(0.2), {BackgroundColor3 = RainLib.CurrentTheme.Secondary})
                     task.delay(0.2, function() t.Content.Visible = false end)
                 end
             end
@@ -336,7 +343,24 @@ function RainLib:Window(options)
             local xOffset = 10 + col * (elementSize.X.Offset + 10)
             local yOffset = 10 + row * (elementSize.Y.Offset + 10)
             tab.ElementCount = tab.ElementCount + 1
+            tab.Content.CanvasSize = UDim2.new(0, 0, 0, yOffset + elementSize.Y.Offset + 10)
             return UDim2.new(0, xOffset, 0, yOffset)
+        end
+        
+        -- Função AddSection como cabeçalho
+        function tab:AddSection(name)
+            print("[RainLib] Adicionando seção: " .. name)
+            local section = Instance.new("TextLabel")
+            section.Size = UDim2.new(1, -10, 0, 20)
+            section.Position = getNextPosition(UDim2.new(1, -10, 0, 20))
+            section.BackgroundTransparency = 1
+            section.Text = name or "Section"
+            section.TextColor3 = RainLib.CurrentTheme.Text
+            section.Font = Enum.Font.GothamBold
+            section.TextSize = 18
+            section.TextXAlignment = Enum.TextXAlignment.Left
+            section.Parent = tab.Container
+            return section
         end
         
         function tab:Button(options)
@@ -630,7 +654,6 @@ function RainLib:Notify(options)
             print("[RainLib] Notificação removida")
         end)
     end)
-    -- Sem warn, ignora erros silenciosamente
 end
 
 function RainLib:SetTheme(theme)
@@ -645,6 +668,11 @@ function RainLib:SetTheme(theme)
             window.TabIndicator.BackgroundColor3 = theme.Accent
             for _, tab in pairs(window.Tabs) do
                 tab.Button.TextColor3 = theme.Text
+                if tab.Content.Visible then
+                    tab.Button.BackgroundColor3 = theme.Accent
+                else
+                    tab.Button.BackgroundColor3 = theme.Secondary
+                end
                 for _, child in pairs(tab.Button:GetChildren()) do
                     if child:IsA("TextLabel") then
                         child.TextColor3 = theme.Text
@@ -671,7 +699,6 @@ function RainLib:SetTheme(theme)
     if success then
         print("[RainLib] Tema mudado com sucesso!")
     end
-    -- Sem warn, ignora erros silenciosamente
 end
 
 print("[RainLib] Biblioteca carregada!")
