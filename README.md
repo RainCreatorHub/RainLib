@@ -2,44 +2,16 @@
 
 ![Roblox](https://img.shields.io/badge/Roblox-Lua-blue?style=flat-square&logo=roblox) ![Version](https://img.shields.io/badge/version-1.0.0-green?style=flat-square) ![Executor](https://img.shields.io/badge/Executor-Supported-orange?style=flat-square): todos
 
-**Rain Library** é uma biblioteca de interface de usuário (UI) para Roblox, escrita em Lua/Luau, projetada para criar interfaces gráficas modernas diretamente no jogo. Com ela, você pode adicionar janelas, abas e elementos como botões, toggles, caixas de texto, sliders, dropdowns e notificações usando um executor de scripts Roblox.
+**Rain Library** é uma biblioteca de interface de usuário (UI) para Roblox, escrita em Lua/Luau, projetada para criar interfaces gráficas modernas diretamente no jogo. Com ela, você pode adicionar janelas, abas e elementos como botões, toggles, caixas de texto, sliders, dropdowns, sessões e notificações usando um executor de scripts Roblox.
 
----
+#### ui library 
 
-## Índice
-
-- [Como Usar com um Executor](#como-usar-com-um-executor)
-- [Criando uma Janela](#criando-uma-janela)
-- [Botão de Minimizar](#botão-de-minimizar)
-- [Adicionando uma Aba](#adicionando-uma-aba)
-- [Elementos de UI](#elementos-de-ui)
-  - [Botão](#botão)
-  - [Toggle (Checkbox)](#toggle-checkbox)
-  - [Textbox (Caixa de Texto)](#textbox-caixa-de-texto)
-  - [Slider](#slider)
-  - [Dropdown (Menu Suspenso)](#dropdown-menu-suspenso)
-  - [Notificação](#notificação)
-- [Exemplo Completo](#exemplo-completo)
-- [Dicas para Executores](#dicas-para-executores)
-- [Suporte](#suporte)
-
----
-
-## Como Usar com um Executor
-
-Para usar a **Rain Library** com um executor (ex.: Synapse X, KRNL, Fluxus), injete o seguinte código no Roblox:
-
+ Load
 ```lua
 local RainLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/RainCreatorHub/RainLib/main/RainLib.lua"))()
 ```
-Passos:
-
-A: Abra seu executor, Cole o código acima na área de script, Execute o script enquanto estiver em um jogo Roblox.
-
-Requisitos: O executor deve suportar HttpGet e rodar scripts no lado do cliente.
-
-Criando uma Janela, Crie uma janela com RainLib:Window para começar sua interface.
-
+ Window 
+ 
 ```Lua
 local window = RainLib:Window({
     Title = "Rain Lib!",
@@ -47,11 +19,7 @@ local window = RainLib:Window({
 }
 ```
 
-Opcional: Adicione Position (ex.: UDim2.new(0.5, -250, 0.5, -175) para centralizar).
-
-Recursos: Arrastável e com botão de Fechar o (X) apaga o gui então não aperte nele.
-
-Botão de Minimizar, Adicione um botão para minimizar a janela com 
+ minimize
 
 ``` Lua
 window:Minimize({
@@ -61,9 +29,7 @@ window:Minimize({
 })
 ```
 
-Dica: Use após criar abas e elementos para evitar bugs.
-
-Adicionando uma Aba, Crie uma aba com window:Tab para organizar seus elementos.
+ Aba
 
 ``` Lua
 local mainTab = window:Tab({
@@ -72,9 +38,14 @@ local mainTab = window:Tab({
     ElementsPerRow = 1
 }
 ```
-Ícones: Veja opções em RainLib.lua no código-fonte (ex.: "home", "settings").
 
-Elementos de UI, Botão Adicione um botão com 
+ section
+
+``` Lua
+mainTab:AddSection("section")
+```
+
+ Button
 
 ``` Lua
 mainTab:Button({
@@ -86,9 +57,8 @@ mainTab:Button({
 })
 ```
 
-Opcional: BackgroundColor3 (ex.: Color3.fromRGB(0, 120, 215)).
+ checkBox
 
-Toggle (Checkbox), Crie um toggle com 
 ``` Lua
 mainTab:Toggle({
     Text = "Ativar Recurso",   -- Texto ao lado
@@ -100,9 +70,8 @@ mainTab:Toggle({
 })
 ```
 
-Retorno: Tabela com Value (true/false).
+ textbox
 
-Textbox (Caixa de Texto), Adicione uma caixa de texto com
 ``` Lua
 mainTab:Textbox({
     Text = "Digite aqui",      -- Texto inicial
@@ -113,9 +82,9 @@ mainTab:Textbox({
     end
 })
 ```
-Nota: Callback acionado ao pressionar Enter.
 
-Slider, Crie um slider com 
+ slider
+
 ``` Lua
 mainTab:Slider({
     Text = "Volume",           -- Texto acima
@@ -127,9 +96,9 @@ mainTab:Slider({
     end
 })
 ```
-Retorno: Tabela com Value (número).
 
-Dropdown (Menu Suspenso), Adicione um menu suspenso com 
+ Dropdown
+
 ``` Lua
 mainTab:Dropdown({
     Size = UDim2.new(1, -20, 0, 30), -- Tamanho
@@ -140,9 +109,8 @@ mainTab:Dropdown({
     end
 })
 ```
-Retorno: Tabela com Value (string).
+ notificação 
 
-Notificação, Exiba uma notificação com 
 ``` Lua
 RainLib:Notify({
     Title = "Aviso",           -- Título
@@ -151,9 +119,7 @@ RainLib:Notify({
 })
 ```
 
-Efeito: Aparece no canto direito e desaparece após o tempo.Exemplo Completo
-
-Um script completo para injetar com seu executor:
+ exemplo completo
 
 ``` Lua
 local RainLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/RainCreatorHub/RainLib/main/RainLib.lua"))()
@@ -171,6 +137,8 @@ local mainTab = window:Tab({
     ElementsPerRow = 1
 })
 
+mainTab:AddSection("sla1")
+
 -- Elementos
 mainTab:Button({
     Text = "Testar",
@@ -179,6 +147,8 @@ mainTab:Button({
         print("Clicado!")
     end
 })
+
+mainTab:AddSection("sla2")
 
 mainTab:Toggle({
     Text = "Ativar",
@@ -229,26 +199,3 @@ window:Minimize({
     Draggable = true
 })
 ```
-Como Usar: Copie, cole no executor e execute no executor. 
-
-Dicas para Executores:
-
-Ordem: Adicione window:Minimize por último para evitar falhas no carregamento.
-
-Teste: Use um jogo Roblox com suporte a GUIs (ex.: um hub ou lugar próprio).
-
-Debug: Verifique a aba de saída do executor para mensagens de erro ou prints.
-
-Segurança: Não execute em jogos com anti-cheat forte, pois injetar scripts pode ser detectado.
-
-Ícones: Veja RainLib.lus no código para personalizar abas.
-
-Suporte:
-
-Problemas ou sugestões? Entre no meu discord ou entre em contato comigo diretamente.
-
-### Mudanças para Executores
-- **Foco**: Instruções adaptadas para usuários de executores, com passos claros para injetar o script.
-- **Badge**: Adicionei um badge "Executor Supported" para destacar compatibilidade.
-- **Suporte**: Removi a seção de contribuição e licença (menos relevante para esse público) e simplifiquei para "Suporte".
-- **Dicas**: Incluí dicas específicas para executores, como evitar anti-cheats.
