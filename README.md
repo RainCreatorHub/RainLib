@@ -15,8 +15,10 @@ local RainLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/RainC
 ```Lua
 local window = RainLib:Window({
     Title = "Rain Lib!",
-    Size = UDim2.new(0, 500, 0, 350)
-}
+    Subtitle = "Rain Lib! sim",
+    SaveConfig = true, -- true ou false
+    ConfigFolder = "ConfigFolder!",
+})
 ```
 
  minimize
@@ -36,7 +38,7 @@ local mainTab = window:Tab({
     Name = "Main",
     Icon = "home",
     ElementsPerRow = 1
-}
+})
 ```
 
  section
