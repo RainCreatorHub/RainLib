@@ -17,7 +17,7 @@ local RainLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/RainC
 ### minimize
 
 ``` Lua
-    Window:Minimize({
+    window:Minimize({
         Text1 = "close",
         Text2 = "open",
         Draggable = true
@@ -31,6 +31,12 @@ local Main = window:Tab({
    Name = "Main",
    Icon = "Home",                            ElementsPerRow = 1
 })
+```
+
+### botão 
+
+``` lua
+tab:Button({Text = "Testar", Callback = function() print("Clicado!") end})
 ```
 
 ### Checkbox 
