@@ -17,11 +17,10 @@ local RainLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/RainC
 ### minimize
 
 ``` Lua
-    window:Minimize({
-        Text1 = "close",
-        Text2 = "open",
-        Draggable = true
-    })
+window:Minimize({
+   Text1 = "Close",
+   Text2 = "Open",
+Draggable = true})
 ```
 
 ### tab
@@ -29,14 +28,17 @@ local RainLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/RainC
 ``` Lua
 local Main = window:Tab({
    Name = "Main",
-   Icon = "Home",                            ElementsPerRow = 1
+   Icon = "Home",                         ElementsPerRow = 1
 })
 ```
 
 ### botão 
 
 ``` lua
-tab:Button({Text = "Testar", Callback = function() print("Clicado!") end})
+tab:Button({Text = "Testar",
+  Callback = function()
+  print("Clicado!")
+end})
 ```
 
 ### Checkbox 
@@ -65,4 +67,37 @@ tab:Button({
 })
 ```
 
+### slider
 
+``` Lua
+tab:Slider({
+Text = "Volume",
+Default = 50,
+Max = 100,
+Callback = function(value)
+
+print(value)
+
+end})
+```
+
+### Dropdown 
+
+``` Lua
+tab:Dropdown({
+Options = {"Fácil", "Difícil"},
+Default = "Fácil",
+Callback = function(value)
+
+print(value)
+  
+end})
+```
+
+### notificação 
+
+``` Lua
+RainLib:Notify({Title = "Aviso",
+  Message = "Algo aconteceu!",
+  Duration = 5})
+```
