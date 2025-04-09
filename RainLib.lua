@@ -52,9 +52,20 @@ function RainLib:Window(options)
     local window = {}
     options = options or {}
     
-    window.Title = options.Title or "Rain Lib"
-    window.Size = options.Size or UDim2.new(0, 500, 0, 350)
-    window.Position = options.Position or UDim2.new(0.5, -250, 0.5, -175)
+    -- Sistema de opções centralizado (sem Size)
+    local defaultOptions = {
+        Title = "Rain Lib",
+        SubTitle = "",
+        Position = UDim2.new(0.5, -300, 0.5, -200),
+        Theme = "Dark",
+        MinimizeKey = Enum.KeyCode.LeftControl
+    }
+    
+    window.Options = {}
+    for key, defaultValue in pairs(defaultOptions) do
+        window.Options[key] = options[key] or defaultValue
+    end
+    
     window.Minimized = false
     window.Tabs = {}
     window.CurrentTabIndex = 1
@@ -62,8 +73,8 @@ function RainLib:Window(options)
     
     local success, err = pcall(function()
         window.MainFrame = Instance.new("Frame")
-        window.MainFrame.Size = window.Size
-        window.MainFrame.Position = window.Position
+        window.MainFrame.Size = UDim2.new(0, 600, 0, 400) -- Tamanho fixo
+        window.MainFrame.Position = window.Options.Position
         window.MainFrame.BackgroundColor3 = RainLib.CurrentTheme.Background
         window.MainFrame.ClipsDescendants = true
         window.MainFrame.Parent = RainLib.ScreenGui
@@ -84,24 +95,35 @@ function RainLib:Window(options)
         shadow.Parent = window.MainFrame
         
         window.TitleBar = Instance.new("Frame")
-        window.TitleBar.Size = UDim2.new(1, 0, 0, 40)
+        window.TitleBar.Size = UDim2.new(1, 0, 0, 50)
         window.TitleBar.BackgroundColor3 = RainLib.CurrentTheme.Secondary
         window.TitleBar.Parent = window.MainFrame
         
         window.TitleLabel = Instance.new("TextLabel")
-        window.TitleLabel.Size = UDim2.new(1, -40, 1, 0)
-        window.TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+        window.TitleLabel.Size = UDim2.new(1, -40, 0, 20)
+        window.TitleLabel.Position = UDim2.new(0, 10, 0, 5)
         window.TitleLabel.BackgroundTransparency = 1
-        window.TitleLabel.Text = window.Title
+        window.TitleLabel.Text = window.Options.Title
         window.TitleLabel.TextColor3 = RainLib.CurrentTheme.Text
         window.TitleLabel.Font = Enum.Font.GothamBold
         window.TitleLabel.TextSize = 16
         window.TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
         window.TitleLabel.Parent = window.TitleBar
         
+        window.SubTitleLabel = Instance.new("TextLabel")
+        window.SubTitleLabel.Size = UDim2.new(1, -40, 0, 15)
+        window.SubTitleLabel.Position = UDim2.new(0, 10, 0, 25)
+        window.SubTitleLabel.BackgroundTransparency = 1
+        window.SubTitleLabel.Text = window.Options.SubTitle
+        window.SubTitleLabel.TextColor3 = RainLib.CurrentTheme.Text
+        window.SubTitleLabel.Font = Enum.Font.Gotham
+        window.SubTitleLabel.TextSize = 12
+        window.SubTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        window.SubTitleLabel.Parent = window.TitleBar
+        
         window.CloseButton = Instance.new("TextButton")
         window.CloseButton.Size = UDim2.new(0, 30, 0, 30)
-        window.CloseButton.Position = UDim2.new(1, -35, 0, 5)
+        window.CloseButton.Position = UDim2.new(1, -35, 0, 10)
         window.CloseButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
         window.CloseButton.Text = "X"
         window.CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -114,8 +136,8 @@ function RainLib:Window(options)
         closeCorner.Parent = window.CloseButton
         
         window.TabContainer = Instance.new("ScrollingFrame")
-        window.TabContainer.Size = UDim2.new(0, 150, 1, -40)
-        window.TabContainer.Position = UDim2.new(0, 0, 0, 40)
+        window.TabContainer.Size = UDim2.new(0, 150, 1, -50)
+        window.TabContainer.Position = UDim2.new(0, 0, 0, 50)
         window.TabContainer.BackgroundColor3 = RainLib.CurrentTheme.Secondary
         window.TabContainer.ScrollBarThickness = 0
         window.TabContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -126,6 +148,18 @@ function RainLib:Window(options)
         window.TabIndicator.BackgroundColor3 = RainLib.CurrentTheme.Accent
         window.TabIndicator.Position = UDim2.new(0, 0, 0, 5)
         window.TabIndicator.Parent = window.TabContainer
+        
+        if window.Options.MinimizeKey then
+            UserInputService.InputBegan:Connect(function(input)
+                if input.KeyCode == window.Options.MinimizeKey and not window.MinimizeButton then
+                    window:Minimize({
+                        Text1 = "Minimizar",
+                        Text2 = "Restaurar",
+                        Draggable = true
+                    })
+                end
+            end)
+        end
     end)
     if not success then
         warn("[RainLib] Falha ao criar janela: " .. err)
@@ -178,9 +212,9 @@ function RainLib:Window(options)
         local button
         local success, err = pcall(function()
             button = Instance.new("TextButton")
-            button.Size = UDim2.new(0, 100, 0, 30)
+            button.Size = UDim2.new(0, 100, 0, 30) -- Tamanho mantido
             button.Position = UDim2.new(0, 10, 0, 10)
-            button.Text = options.Text1 or "Close"
+            button.Text = options.Text1 or "Minimizar"
             button.BackgroundColor3 = RainLib.CurrentTheme.Accent
             button.TextColor3 = RainLib.CurrentTheme.Text
             button.Font = Enum.Font.SourceSansBold
@@ -194,7 +228,7 @@ function RainLib:Window(options)
             
             button.MouseButton1Click:Connect(function()
                 window.MainFrame.Visible = not window.MainFrame.Visible
-                button.Text = window.MainFrame.Visible and (options.Text1 or "Close") or (options.Text2 or "Open")
+                button.Text = window.MainFrame.Visible and (options.Text1 or "Minimizar") or (options.Text2 or "Restaurar")
                 print("[RainLib] GUI " .. (window.MainFrame.Visible and "aberto" or "fechado"))
             end)
             
@@ -243,7 +277,7 @@ function RainLib:Window(options)
         print("[RainLib] Criando aba...")
         local tab = {}
         options = options or {}
-        tab.Name = options.Title or "Tab" -- Alterado de "Name" para "Title" pra alinhar com o exemplo
+        tab.Name = options.Title or "Tab"
         tab.Icon = options.Icon or nil
         tab.ElementsPerRow = options.ElementsPerRow or 1
         tab.ElementCount = 0
@@ -378,7 +412,7 @@ function RainLib:Window(options)
         end
         
         function tab:AddParagraph(options)
-            local paragraphSize = UDim2.new(1, -10, 0, 50)
+            local paragraphSize = UDim2.new(0, 120, 0, 40)
             local frame = Instance.new("Frame")
             frame.Size = paragraphSize
             frame.BackgroundTransparency = 1
@@ -389,18 +423,18 @@ function RainLib:Window(options)
             title.BackgroundTransparency = 1
             title.TextColor3 = RainLib.CurrentTheme.Text
             title.Font = Enum.Font.GothamBold
-            title.TextSize = 16
+            title.TextSize = 12
             title.TextXAlignment = Enum.TextXAlignment.Left
             title.Parent = frame
             
             local content = Instance.new("TextLabel")
-            content.Size = UDim2.new(1, 0, 0, 30)
+            content.Size = UDim2.new(1, 0, 0, 20)
             content.Position = UDim2.new(0, 0, 0, 20)
             content.Text = options.Content or "Content"
             content.BackgroundTransparency = 1
             content.TextColor3 = RainLib.CurrentTheme.Text
             content.Font = Enum.Font.SourceSans
-            content.TextSize = 14
+            content.TextSize = 10
             content.TextWrapped = true
             content.TextXAlignment = Enum.TextXAlignment.Left
             content.Parent = frame
@@ -410,7 +444,7 @@ function RainLib:Window(options)
         end
         
         function tab:AddButton(options)
-            local buttonSize = options.Size or UDim2.new(0, 100, 0, 30)
+            local buttonSize = UDim2.new(0, 120, 0, 40)
             local button = Instance.new("TextButton")
             button.Size = buttonSize
             button.Text = options.Title or "Button"
@@ -429,7 +463,7 @@ function RainLib:Window(options)
         end
         
         function tab:AddToggle(key, options)
-            local toggleSize = options.Size or UDim2.new(0, 100, 0, 30)
+            local toggleSize = UDim2.new(0, 120, 0, 40)
             local toggle = { Value = options.Default or false }
             local frame = Instance.new("Frame")
             frame.Size = toggleSize
@@ -440,7 +474,7 @@ function RainLib:Window(options)
             corner.Parent = frame
             
             local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(0, 70, 1, 0)
+            label.Size = UDim2.new(0, 80, 1, 0)
             label.Text = options.Title or "Toggle"
             label.BackgroundTransparency = 1
             label.TextColor3 = RainLib.CurrentTheme.Text
@@ -450,7 +484,7 @@ function RainLib:Window(options)
             
             local indicator = Instance.new("Frame")
             indicator.Size = UDim2.new(0, 20, 0, 20)
-            indicator.Position = UDim2.new(1, -25, 0.5, -10)
+            indicator.Position = UDim2.new(1, -30, 0.5, -10)
             indicator.BackgroundColor3 = toggle.Value and RainLib.CurrentTheme.Accent or RainLib.CurrentTheme.Disabled
             indicator.Parent = frame
             
@@ -475,14 +509,15 @@ function RainLib:Window(options)
                         callback(toggle.Value)
                     end
                 end)
-            size = 2
+            end
+            
             local Options = {}
             Options[key] = toggle
             return toggle
         end
         
         function tab:AddSlider(key, options)
-            local sliderSize = options.Size or UDim2.new(0, 200, 0, 40)
+            local sliderSize = UDim2.new(0, 120, 0, 40)
             local slider = { Value = options.Default or options.Min or 0 }
             local frame = Instance.new("Frame")
             frame.Size = sliderSize
@@ -493,22 +528,22 @@ function RainLib:Window(options)
             corner.Parent = frame
             
             local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(0, 100, 0, 20)
+            label.Size = UDim2.new(0, 80, 0, 20)
             label.Text = options.Title or "Slider"
             label.BackgroundTransparency = 1
             label.TextColor3 = RainLib.CurrentTheme.Text
             label.Font = Enum.Font.SourceSans
-            label.TextSize = 16
+            label.TextSize = 12
             label.Parent = frame
             
             local valueLabel = Instance.new("TextLabel")
-            valueLabel.Size = UDim2.new(0, 50, 0, 20)
-            valueLabel.Position = UDim2.new(1, -60, 0, 0)
+            valueLabel.Size = UDim2.new(0, 30, 0, 20)
+            valueLabel.Position = UDim2.new(1, -35, 0, 0)
             valueLabel.Text = tostring(slider.Value)
             valueLabel.BackgroundTransparency = 1
             valueLabel.TextColor3 = RainLib.CurrentTheme.Text
             valueLabel.Font = Enum.Font.SourceSans
-            valueLabel.TextSize = 16
+            valueLabel.TextSize = 12
             valueLabel.Parent = frame
             
             local bar = Instance.new("Frame")
@@ -583,7 +618,7 @@ function RainLib:Window(options)
         end
         
         function tab:AddDropdown(key, options)
-            local dropdownSize = options.Size or UDim2.new(0, 150, 0, 30)
+            local dropdownSize = UDim2.new(0, 120, 0, 40)
             local dropdown = { Value = options.Default or (options.Multi and {} or options.Values[1]) }
             local frame = Instance.new("Frame")
             frame.Size = dropdownSize
@@ -599,7 +634,7 @@ function RainLib:Window(options)
             label.BackgroundTransparency = 1
             label.TextColor3 = RainLib.CurrentTheme.Text
             label.Font = Enum.Font.SourceSans
-            label.TextSize = 16
+            label.TextSize = 14
             label.Parent = frame
             
             local arrow = Instance.new("TextLabel")
@@ -609,7 +644,7 @@ function RainLib:Window(options)
             arrow.BackgroundTransparency = 1
             arrow.TextColor3 = RainLib.CurrentTheme.Text
             arrow.Font = Enum.Font.SourceSans
-            arrow.TextSize = 16
+            arrow.TextSize = 14
             arrow.Parent = frame
             
             local list = Instance.new("Frame")
@@ -631,13 +666,17 @@ function RainLib:Window(options)
                 btn.BackgroundTransparency = 1
                 btn.TextColor3 = RainLib.CurrentTheme.Text
                 btn.Font = Enum.Font.SourceSans
-                btn.TextSize = 16
+                btn.TextSize = 14
                 btn.Parent = list
                 
                 btn.MouseButton1Click:Connect(function()
                     if options.Multi then
                         dropdown.Value[opt] = not dropdown.Value[opt]
-                        label.Text = table.concat(next(dropdown.Value) and dropdown.Value or {}, ", ")
+                        local values = {}
+                        for k, v in pairs(dropdown.Value) do
+                            if v then table.insert(values, k) end
+                        end
+                        label.Text = table.concat(values, ", ")
                     else
                         dropdown.Value = opt
                         label.Text = opt
@@ -672,7 +711,11 @@ function RainLib:Window(options)
                             dropdown.Value[k] = v
                         end
                     end
-                    label.Text = table.concat(next(dropdown.Value) and dropdown.Value or {}, ", ")
+                    local values = {}
+                    for k, v in pairs(dropdown.Value) do
+                        if v then table.insert(values, k) end
+                    end
+                    label.Text = table.concat(values, ", ")
                 else
                     if table.find(options.Values, value) then
                         dropdown.Value = value
@@ -687,8 +730,7 @@ function RainLib:Window(options)
         end
         
         function tab:AddColorpicker(key, options)
-            -- Implementação simplificada de colorpicker (sem transparência por enquanto)
-            local colorpickerSize = UDim2.new(0, 150, 0, 30)
+            local colorpickerSize = UDim2.new(0, 120, 0, 40)
             local colorpicker = { Value = options.Default or Color3.fromRGB(255, 255, 255) }
             local frame = Instance.new("Frame")
             frame.Size = colorpickerSize
@@ -699,12 +741,12 @@ function RainLib:Window(options)
             corner.Parent = frame
             
             local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(0, 100, 1, 0)
+            label.Size = UDim2.new(0, 80, 1, 0)
             label.Text = options.Title or "Colorpicker"
             label.BackgroundTransparency = 1
             label.TextColor3 = RainLib.CurrentTheme.Text
             label.Font = Enum.Font.SourceSans
-            label.TextSize = 16
+            label.TextSize = 14
             label.Parent = frame
             
             local container = createContainer(frame, colorpickerSize)
@@ -724,7 +766,7 @@ function RainLib:Window(options)
         end
         
         function tab:AddKeybind(key, options)
-            local keybindSize = UDim2.new(0, 150, 0, 30)
+            local keybindSize = UDim2.new(0, 120, 0, 40)
             local keybind = { Value = options.Default or "None", Mode = options.Mode or "Toggle" }
             local frame = Instance.new("Frame")
             frame.Size = keybindSize
@@ -735,22 +777,22 @@ function RainLib:Window(options)
             corner.Parent = frame
             
             local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(0, 100, 1, 0)
+            label.Size = UDim2.new(0, 80, 1, 0)
             label.Text = options.Title or "Keybind"
             label.BackgroundTransparency = 1
             label.TextColor3 = RainLib.CurrentTheme.Text
             label.Font = Enum.Font.SourceSans
-            label.TextSize = 16
+            label.TextSize = 14
             label.Parent = frame
             
             local keyLabel = Instance.new("TextLabel")
-            keyLabel.Size = UDim2.new(0, 40, 1, 0)
-            keyLabel.Position = UDim2.new(1, -45, 0, 0)
+            keyLabel.Size = UDim2.new(0, 30, 1, 0)
+            keyLabel.Position = UDim2.new(1, -35, 0, 0)
             keyLabel.Text = keybind.Value
             keyLabel.BackgroundTransparency = 1
             keyLabel.TextColor3 = RainLib.CurrentTheme.Text
             keyLabel.Font = Enum.Font.SourceSans
-            keyLabel.TextSize = 16
+            keyLabel.TextSize = 14
             keyLabel.Parent = frame
             
             local container = createContainer(frame, keybindSize)
@@ -817,7 +859,7 @@ function RainLib:Window(options)
         end
         
         function tab:AddInput(key, options)
-            local inputSize = options.Size or UDim2.new(0, 100, 0, 30)
+            local inputSize = UDim2.new(0, 120, 0, 40)
             local input = { Value = options.Default or "" }
             local textbox = Instance.new("TextBox")
             textbox.Size = inputSize
@@ -825,7 +867,7 @@ function RainLib:Window(options)
             textbox.BackgroundColor3 = RainLib.CurrentTheme.Secondary
             textbox.TextColor3 = RainLib.CurrentTheme.Text
             textbox.Font = Enum.Font.SourceSans
-            textbox.TextSize = 16
+            textbox.TextSize = 14
             textbox.PlaceholderText = options.Placeholder or ""
             
             local corner = Instance.new("UICorner")
@@ -852,62 +894,77 @@ function RainLib:Window(options)
             return input
         end
         
+        function tab:Dialog(options)
+            local dialog = Instance.new("Frame")
+            dialog.Size = UDim2.new(0, 300, 0, 150)
+            dialog.Position = UDim2.new(0.5, -150, 0.5, -75)
+            dialog.BackgroundColor3 = RainLib.CurrentTheme.Background
+            dialog.Parent = RainLib.ScreenGui
+            
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0, 8)
+            corner.Parent = dialog
+            
+            local title = Instance.new("TextLabel")
+            title.Size = UDim2.new(1, -10, 0, 20)
+            title.Position = UDim2.new(0, 5, 0, 5)
+            title.Text = options.Title or "Dialog"
+            title.BackgroundTransparency = 1
+            title.TextColor3 = RainLib.CurrentTheme.Text
+            title.Font = Enum.Font.GothamBold
+            title.TextSize = 16
+            title.Parent = dialog
+            
+            local content = Instance.new("TextLabel")
+            content.Size = UDim2.new(1, -10, 0, 60)
+            content.Position = UDim2.new(0, 5, 0, 30)
+            content.Text = options.Content or "Content"
+            content.BackgroundTransparency = 1
+            content.TextColor3 = RainLib.CurrentTheme.Text
+            content.Font = Enum.Font.SourceSans
+            content.TextSize = 14
+            content.TextWrapped = true
+            content.Parent = dialog
+            
+            for i, btn in ipairs(options.Buttons or {}) do
+                local button = Instance.new("TextButton")
+                button.Size = UDim2.new(0, 80, 0, 30)
+                button.Position = UDim2.new(0, 10 + (i-1) * 90, 1, -40)
+                button.Text = btn.Title or "Button"
+                button.BackgroundColor3 = RainLib.CurrentTheme.Accent
+                button.TextColor3 = RainLib.CurrentTheme.Text
+                button.Font = Enum.Font.SourceSansBold
+                button.TextSize = 16
+                button.Parent = dialog
+                
+                local btnCorner = Instance.new("UICorner")
+                btnCorner.CornerRadius = UDim.new(0, 8)
+                btnCorner.Parent = button
+                
+                button.MouseButton1Click:Connect(function()
+                    if btn.Callback then
+                        btn.Callback()
+                    end
+                    dialog:Destroy()
+                end)
+            end
+        end
+        
         return tab
     end
     
-    function window:Dialog(options)
-        local dialog = Instance.new("Frame")
-        dialog.Size = UDim2.new(0, 300, 0, 150)
-        dialog.Position = UDim2.new(0.5, -150, 0.5, -75)
-        dialog.BackgroundColor3 = RainLib.CurrentTheme.Background
-        dialog.Parent = RainLib.ScreenGui
-        
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 8)
-        corner.Parent = dialog
-        
-        local title = Instance.new("TextLabel")
-        title.Size = UDim2.new(1, -10, 0, 20)
-        title.Position = UDim2.new(0, 5, 0, 5)
-        title.Text = options.Title or "Dialog"
-        title.BackgroundTransparency = 1
-        title.TextColor3 = RainLib.CurrentTheme.Text
-        title.Font = Enum.Font.GothamBold
-        title.TextSize = 16
-        title.Parent = dialog
-        
-        local content = Instance.new("TextLabel")
-        content.Size = UDim2.new(1, -10, 0, 60)
-        content.Position = UDim2.new(0, 5, 0, 30)
-        content.Text = options.Content or "Content"
-        content.BackgroundTransparency = 1
-        content.TextColor3 = RainLib.CurrentTheme.Text
-        content.Font = Enum.Font.SourceSans
-        content.TextSize = 14
-        content.TextWrapped = true
-        content.Parent = dialog
-        
-        for i, btn in ipairs(options.Buttons or {}) do
-            local button = Instance.new("TextButton")
-            button.Size = UDim2.new(0, 80, 0, 30)
-            button.Position = UDim2.new(0, 10 + (i-1) * 90, 1, -40)
-            button.Text = btn.Title or "Button"
-            button.BackgroundColor3 = RainLib.CurrentTheme.Accent
-            button.TextColor3 = RainLib.CurrentTheme.Text
-            button.Font = Enum.Font.SourceSansBold
-            button.TextSize = 16
-            button.Parent = dialog
-            
-            local btnCorner = Instance.new("UICorner")
-            btnCorner.CornerRadius = UDim.new(0, 8)
-            btnCorner.Parent = button
-            
-            button.MouseButton1Click:Connect(function()
-                if btn.Callback then
-                    btn.Callback()
-                end
-                dialog:Destroy()
-            end)
+    function window:SetOption(key, value)
+        if defaultOptions[key] ~= nil then
+            window.Options[key] = value
+            if key == "Title" then
+                window.TitleLabel.Text = value
+            elseif key == "SubTitle" then
+                window.SubTitleLabel.Text = value
+            elseif key == "Position" then
+                window.MainFrame.Position = value
+            end
+        else
+            warn("[RainLib] Opção inválida: " .. key)
         end
     end
     
@@ -919,7 +976,7 @@ function RainLib:Notify(options)
     print("[RainLib] Criando notificação...")
     local success, err = pcall(function()
         local notification = Instance.new("Frame")
-        notification.Size = UDim2.new(0, 280, 0, 80)
+        notification.Size = UDim2.new(0, 280, 0, 80) -- Tamanho mantido
         notification.Position = UDim2.new(0, 10, 0, (#RainLib.Notifications:GetChildren() - 1) * 90 + 10)
         notification.BackgroundColor3 = RainLib.CurrentTheme.Background
         notification.Parent = RainLib.Notifications
@@ -966,6 +1023,7 @@ function RainLib:SetTheme(theme)
             window.MainFrame.BackgroundColor3 = theme.Background
             window.TitleBar.BackgroundColor3 = theme.Secondary
             window.TitleLabel.TextColor3 = theme.Text
+            window.SubTitleLabel.TextColor3 = theme.Text -- Adicionado para subtítulo
             window.TabContainer.BackgroundColor3 = theme.Secondary
             window.TabIndicator.BackgroundColor3 = theme.Accent
             for _, tab in pairs(window.Tabs) do
@@ -987,10 +1045,11 @@ function RainLib:SetTheme(theme)
                     elseif child:IsA("Frame") then
                         child.BackgroundColor3 = theme.Secondary
                         for _, subchild in pairs(child:GetChildren()) do
-                        if subchild:IsA("TextLabel") then
-                            subchild.TextColor3 = theme.Text
-                        elseif subchild:IsA("Frame") then
-                            subchild.BackgroundColor3 = subchild.Parent.BackgroundColor3 == theme.Accent and theme.Accent or theme.Disabled
+                            if subchild:IsA("TextLabel") then
+                                subchild.TextColor3 = theme.Text
+                            elseif subchild:IsA("Frame") then
+                                subchild.BackgroundColor3 = subchild.Parent.BackgroundColor3 == theme.Accent and theme.Accent or theme.Disabled
+                            end
                         end
                     end
                 end
