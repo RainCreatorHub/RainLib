@@ -52,7 +52,6 @@ function RainLib:Window(options)
     local window = {}
     options = options or {}
     
-    -- Sistema de opções centralizado (sem Size)
     local defaultOptions = {
         Title = "Rain Lib",
         SubTitle = "",
@@ -73,7 +72,7 @@ function RainLib:Window(options)
     
     local success, err = pcall(function()
         window.MainFrame = Instance.new("Frame")
-        window.MainFrame.Size = UDim2.new(0, 600, 0, 400) -- Tamanho fixo
+        window.MainFrame.Size = UDim2.new(0, 600, 0, 400)
         window.MainFrame.Position = window.Options.Position
         window.MainFrame.BackgroundColor3 = RainLib.CurrentTheme.Background
         window.MainFrame.ClipsDescendants = true
@@ -149,14 +148,15 @@ function RainLib:Window(options)
         window.TabIndicator.Position = UDim2.new(0, 0, 0, 5)
         window.TabIndicator.Parent = window.TabContainer
         
+        -- MinimizeKey apenas alterna visibilidade, sem criar botão
         if window.Options.MinimizeKey then
             UserInputService.InputBegan:Connect(function(input)
-                if input.KeyCode == window.Options.MinimizeKey and not window.MinimizeButton then
-                    window:Minimize({
-                        Text1 = "Minimizar",
-                        Text2 = "Restaurar",
-                        Draggable = true
-                    })
+                if input.KeyCode == window.Options.MinimizeKey then
+                    window.MainFrame.Visible = not window.MainFrame.Visible
+                    if window.MinimizeButton then
+                        window.MinimizeButton.Text = window.MainFrame.Visible and "Close" or "Open"
+                    end
+                    print("[RainLib] GUI " .. (window.MainFrame.Visible and "aberto" or "fechado") .. " via MinimizeKey")
                 end
             end)
         end
@@ -212,9 +212,9 @@ function RainLib:Window(options)
         local button
         local success, err = pcall(function()
             button = Instance.new("TextButton")
-            button.Size = UDim2.new(0, 100, 0, 30) -- Tamanho mantido
+            button.Size = UDim2.new(0, 100, 0, 30)
             button.Position = UDim2.new(0, 10, 0, 10)
-            button.Text = options.Text1 or "Minimizar"
+            button.Text = options.Text1 or "Close"
             button.BackgroundColor3 = RainLib.CurrentTheme.Accent
             button.TextColor3 = RainLib.CurrentTheme.Text
             button.Font = Enum.Font.SourceSansBold
@@ -228,7 +228,7 @@ function RainLib:Window(options)
             
             button.MouseButton1Click:Connect(function()
                 window.MainFrame.Visible = not window.MainFrame.Visible
-                button.Text = window.MainFrame.Visible and (options.Text1 or "Minimizar") or (options.Text2 or "Restaurar")
+                button.Text = window.MainFrame.Visible and (options.Text1 or "Close") or (options.Text2 or "Open")
                 print("[RainLib] GUI " .. (window.MainFrame.Visible and "aberto" or "fechado"))
             end)
             
@@ -976,7 +976,7 @@ function RainLib:Notify(options)
     print("[RainLib] Criando notificação...")
     local success, err = pcall(function()
         local notification = Instance.new("Frame")
-        notification.Size = UDim2.new(0, 280, 0, 80) -- Tamanho mantido
+        notification.Size = UDim2.new(0, 280, 0, 80)
         notification.Position = UDim2.new(0, 10, 0, (#RainLib.Notifications:GetChildren() - 1) * 90 + 10)
         notification.BackgroundColor3 = RainLib.CurrentTheme.Background
         notification.Parent = RainLib.Notifications
@@ -1023,7 +1023,7 @@ function RainLib:SetTheme(theme)
             window.MainFrame.BackgroundColor3 = theme.Background
             window.TitleBar.BackgroundColor3 = theme.Secondary
             window.TitleLabel.TextColor3 = theme.Text
-            window.SubTitleLabel.TextColor3 = theme.Text -- Adicionado para subtítulo
+            window.SubTitleLabel.TextColor3 = theme.Text
             window.TabContainer.BackgroundColor3 = theme.Secondary
             window.TabIndicator.BackgroundColor3 = theme.Accent
             for _, tab in pairs(window.Tabs) do
