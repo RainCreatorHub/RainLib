@@ -618,115 +618,166 @@ function RainLib:Window(options)
         end
         
         function tab:AddDropdown(key, options)
-            local dropdownSize = UDim2.new(0, 120, 0, 40)
-            local dropdown = { Value = options.Default or (options.Multi and {} or options.Values[1]) }
-            local frame = Instance.new("Frame")
-            frame.Size = dropdownSize
-            frame.BackgroundColor3 = RainLib.CurrentTheme.Secondary
-            
-            local corner = Instance.new("UICorner")
-            corner.CornerRadius = UDim.new(0, 8)
-            corner.Parent = frame
-            
-            local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(1, -30, 1, 0)
-            label.Text = options.Multi and table.concat(next(dropdown.Value) and dropdown.Value or {}, ", ") or dropdown.Value
-            label.BackgroundTransparency = 1
-            label.TextColor3 = RainLib.CurrentTheme.Text
-            label.Font = Enum.Font.SourceSans
-            label.TextSize = 14
-            label.Parent = frame
-            
-            local arrow = Instance.new("TextLabel")
-            arrow.Size = UDim2.new(0, 20, 1, 0)
-            arrow.Position = UDim2.new(1, -25, 0, 0)
-            arrow.Text = "▼"
-            arrow.BackgroundTransparency = 1
-            arrow.TextColor3 = RainLib.CurrentTheme.Text
-            arrow.Font = Enum.Font.SourceSans
-            arrow.TextSize = 14
-            arrow.Parent = frame
-            
-            local list = Instance.new("Frame")
-            list.Size = UDim2.new(1, 0, 0, #options.Values * 30)
-            list.Position = UDim2.new(0, 0, 1, 5)
-            list.BackgroundColor3 = RainLib.CurrentTheme.Secondary
-            list.Visible = false
-            list.Parent = frame
-            
-            local listCorner = Instance.new("UICorner")
-            listCorner.CornerRadius = UDim.new(0, 8)
-            listCorner.Parent = list
-            
-            for i, opt in ipairs(options.Values) do
-                local btn = Instance.new("TextButton")
-                btn.Size = UDim2.new(1, 0, 0, 30)
-                btn.Position = UDim2.new(0, 0, 0, (i-1) * 30)
-                btn.Text = opt
-                btn.BackgroundTransparency = 1
-                btn.TextColor3 = RainLib.CurrentTheme.Text
-                btn.Font = Enum.Font.SourceSans
-                btn.TextSize = 14
-                btn.Parent = list
-                
-                btn.MouseButton1Click:Connect(function()
-                    if options.Multi then
-                        dropdown.Value[opt] = not dropdown.Value[opt]
-                        local values = {}
-                        for k, v in pairs(dropdown.Value) do
-                            if v then table.insert(values, k) end
-                        end
-                        label.Text = table.concat(values, ", ")
-                    else
-                        dropdown.Value = opt
-                        label.Text = opt
-                        list.Visible = false
-                    end
-                    if options.Callback then
-                        options.Callback(dropdown.Value)
-                    end
-                end)
-            end
-            
-            local container = createContainer(frame, dropdownSize)
-            frame.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    list.Visible = not list.Visible
+    local dropdownSize = UDim2.new(0, 120, 0, 40)
+    local dropdown = { Value = options.Default or (options.Multi and {} or options.Values[1]) }
+    local frame = Instance.new("Frame")
+    frame.Size = dropdownSize
+    frame.BackgroundColor3 = RainLib.CurrentTheme.Secondary
+    frame.ClipsDescendants = true -- Pra animação não vazar
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = frame
+
+    local shadow = Instance.new("ImageLabel")
+    shadow.Size = UDim2.new(1, 10, 1, 10)
+    shadow.Position = UDim2.new(0, -5, 0, -5)
+    shadow.BackgroundTransparency = 1
+    shadow.Image = "rbxassetid://1316045217"
+    shadow.ImageTransparency = 0.8
+    shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.ScaleType = Enum.ScaleType.Slice
+    shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+    shadow.Parent = frame
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -30, 1, 0)
+    label.Text = options.Multi and table.concat(next(dropdown.Value) and dropdown.Value or {}, ", ") or dropdown.Value
+    label.BackgroundTransparency = 1
+    label.TextColor3 = RainLib.CurrentTheme.Text
+    label.Font = Enum.Font.SourceSansBold
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextTruncate = Enum.TextTruncate.AtEnd
+    label.Parent = frame
+
+    local arrow = Instance.new("TextLabel")
+    arrow.Size = UDim2.new(0, 20, 1, 0)
+    arrow.Position = UDim2.new(1, -25, 0, 0)
+    arrow.Text = "▼"
+    arrow.BackgroundTransparency = 1
+    arrow.TextColor3 = RainLib.CurrentTheme.Text
+    arrow.Font = Enum.Font.SourceSans
+    arrow.TextSize = 14
+    arrow.Parent = frame
+
+    local list = Instance.new("Frame")
+    list.Size = UDim2.new(1, 0, 0, 0) -- Começa fechado
+    list.Position = UDim2.new(0, 0, 1, 5)
+    list.BackgroundColor3 = RainLib.CurrentTheme.Secondary
+    list.Visible = true
+    list.ClipsDescendants = true
+    list.Parent = frame
+
+    local listCorner = Instance.new("UICorner")
+    listCorner.CornerRadius = UDim.new(0, 8)
+    listCorner.Parent = list
+
+    local listShadow = Instance.new("ImageLabel")
+    listShadow.Size = UDim2.new(1, 10, 1, 10)
+    listShadow.Position = UDim2.new(0, -5, 0, -5)
+    listShadow.BackgroundTransparency = 1
+    listShadow.Image = "rbxassetid://1316045217"
+    listShadow.ImageTransparency = 0.8
+    listShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    listShadow.ScaleType = Enum.ScaleType.Slice
+    listShadow.SliceCenter = Rect.new(10, 10, 118, 118)
+    listShadow.Parent = list
+
+    local listPadding = Instance.new("UIPadding")
+    listPadding.PaddingTop = UDim.new(0, 5)
+    listPadding.PaddingBottom = UDim.new(0, 5)
+    listPadding.Parent = list
+
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Parent = list
+
+    for i, opt in ipairs(options.Values) do
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, -10, 0, 30)
+        btn.Position = UDim2.new(0, 5, 0, (i-1) * 35)
+        btn.BackgroundColor3 = RainLib.CurrentTheme.Secondary
+        btn.Text = opt
+        btn.TextColor3 = RainLib.CurrentTheme.Text
+        btn.Font = Enum.Font.SourceSans
+        btn.TextSize = 14
+        btn.LayoutOrder = i
+        btn.Parent = list
+
+        local btnCorner = Instance.new("UICorner")
+        btnCorner.CornerRadius = UDim.new(0, 6)
+        btnCorner.Parent = btn
+
+        btn.MouseEnter:Connect(function()
+            tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = RainLib.CurrentTheme.Accent})
+        end)
+        btn.MouseLeave:Connect(function()
+            tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = RainLib.CurrentTheme.Secondary})
+        end)
+
+        btn.MouseButton1Click:Connect(function()
+            if options.Multi then
+                dropdown.Value[opt] = not dropdown.Value[opt]
+                local values = {}
+                for k, v in pairs(dropdown.Value) do
+                    if v then table.insert(values, k) end
                 end
-            end)
-            
-            function dropdown:OnChanged(callback)
-                frame.InputBegan:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                        callback(dropdown.Value)
-                    end
-                end)
+                label.Text = table.concat(values, ", ")
+            else
+                dropdown.Value = opt
+                label.Text = opt
+                tween(list, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 0)})
             end
-            
-            function dropdown:SetValue(value)
-                if options.Multi then
-                    dropdown.Value = {}
-                    for k, v in pairs(value) do
-                        if table.find(options.Values, k) then
-                            dropdown.Value[k] = v
-                        end
-                    end
-                    local values = {}
-                    for k, v in pairs(dropdown.Value) do
-                        if v then table.insert(values, k) end
-                    end
-                    label.Text = table.concat(values, ", ")
-                else
-                    if table.find(options.Values, value) then
-                        dropdown.Value = value
-                        label.Text = value
-                    end
+            if options.Callback then
+                options.Callback(dropdown.Value)
+            end
+        end)
+    end
+
+    local container = createContainer(frame, dropdownSize)
+    local isOpen = false
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isOpen = not isOpen
+            local targetSize = isOpen and UDim2.new(1, 0, 0, #options.Values * 35) or UDim2.new(1, 0, 0, 0)
+            tween(list, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = targetSize})
+            tween(arrow, TweenInfo.new(0.3), {Rotation = isOpen and 180 or 0})
+        end
+    end)
+
+    function dropdown:OnChanged(callback)
+        frame.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                callback(dropdown.Value)
+            end
+        end)
+    end
+
+    function dropdown:SetValue(value)
+        if options.Multi then
+            dropdown.Value = {}
+            for k, v in pairs(value) do
+                if table.find(options.Values, k) then
+                    dropdown.Value[k] = v
                 end
             end
-            
-            local Options = {}
-            Options[key] = dropdown
-            return dropdown
+            local values = {}
+            for k, v in pairs(dropdown.Value) do
+                if v then table.insert(values, k) end
+            end
+            label.Text = table.concat(values, ", ")
+        else
+            if table.find(options.Values, value) then
+                dropdown.Value = value
+                label.Text = value
+            end
+        end
+    end
+
+    local Options = {}
+    Options[key] = dropdown
+    return dropdown
         end
         
         function tab:AddColorpicker(key, options)
