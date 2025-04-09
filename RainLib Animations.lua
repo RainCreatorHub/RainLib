@@ -3,14 +3,12 @@ local RainLibAnimations = {}
 
 local TweenService = game:GetService("TweenService")
 
--- Função genérica pra criar tweens
 local function createTween(object, tweenInfo, properties)
     local tween = TweenService:Create(object, tweenInfo, properties)
     tween:Play()
     return tween
 end
 
--- Animação pro Paragraph (fade-in do texto)
 function RainLibAnimations.AnimateParagraph(paragraphFrame)
     local title = paragraphFrame:FindFirstChild("Title")
     local content = paragraphFrame:FindFirstChild("Content")
@@ -22,7 +20,6 @@ function RainLibAnimations.AnimateParagraph(paragraphFrame)
     end
 end
 
--- Animação pro Button (escala ao clicar)
 function RainLibAnimations.AnimateButton(button)
     button.MouseButton1Down:Connect(function()
         createTween(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, 110, 0, 36)})
@@ -32,7 +29,6 @@ function RainLibAnimations.AnimateButton(button)
     end)
 end
 
--- Animação pro Toggle (transição de cor e movimento do indicador)
 function RainLibAnimations.AnimateToggle(toggleFrame, value)
     local indicator = toggleFrame:FindFirstChild("Indicator")
     if indicator then
@@ -45,7 +41,6 @@ function RainLibAnimations.AnimateToggle(toggleFrame, value)
     end
 end
 
--- Animação pro Slider (preenchimento suave)
 function RainLibAnimations.AnimateSlider(sliderFrame, value, min, max)
     local fill = sliderFrame:FindFirstChild("Fill")
     if fill then
@@ -56,7 +51,6 @@ function RainLibAnimations.AnimateSlider(sliderFrame, value, min, max)
     end
 end
 
--- Animação pro Dropdown (abrir/fechar com rotação da seta)
 function RainLibAnimations.AnimateDropdown(dropdownFrame, listFrame, options, isOpen)
     local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
     local arrow = dropdownFrame:FindFirstChild("Arrow")
@@ -68,14 +62,12 @@ function RainLibAnimations.AnimateDropdown(dropdownFrame, listFrame, options, is
     end
 end
 
--- Animação pro Colorpicker (transição de cor)
 function RainLibAnimations.AnimateColorpicker(colorpickerFrame, newColor)
     createTween(colorpickerFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         BackgroundColor3 = newColor
     })
 end
 
--- Animação pro Keybind (pulsar ao mudar a tecla)
 function RainLibAnimations.AnimateKeybind(keybindFrame, isChanging)
     local keyLabel = keybindFrame:FindFirstChild("KeyLabel")
     if keyLabel then
@@ -87,7 +79,6 @@ function RainLibAnimations.AnimateKeybind(keybindFrame, isChanging)
     end
 end
 
--- Animação pro Input (borda piscando ao focar)
 function RainLibAnimations.AnimateInput(inputTextbox)
     local stroke = Instance.new("UIStroke")
     stroke.Thickness = 1
@@ -103,7 +94,6 @@ function RainLibAnimations.AnimateInput(inputTextbox)
     end)
 end
 
--- Animação pro Dialog (fade-in e scale)
 function RainLibAnimations.AnimateDialog(dialogFrame)
     dialogFrame.BackgroundTransparency = 1
     dialogFrame.Size = UDim2.new(0, 280, 0, 140)
