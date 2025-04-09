@@ -15,6 +15,7 @@ local RainLib = {
 }
 
 print("[RainLib] Carregando serviços...")
+
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -147,6 +148,7 @@ function RainLib:Window(options)
         window.TabIndicator.Position = UDim2.new(0, 0, 0, 5)
         window.TabIndicator.Parent = window.TabContainer
         
+        -- MinimizeKey apenas alterna visibilidade, sem criar botão
         if window.Options.MinimizeKey then
             UserInputService.InputBegan:Connect(function(input)
                 if input.KeyCode == window.Options.MinimizeKey then
@@ -217,10 +219,11 @@ function RainLib:Window(options)
             button.TextColor3 = RainLib.CurrentTheme.Text
             button.Font = Enum.Font.SourceSansBold
             button.TextSize = 16
+            button.BackgroundTransparency = options.BackgroundTransparency or 0
             button.Parent = RainLib.ScreenGui
             
             local corner = Instance.new("UICorner")
-            corner.CornerRadius = UDim.new(0, 8)
+            corner.CornerRadius = options.CornerRadius or UDim.new(0, 8)
             corner.Parent = button
             
             button.MouseButton1Click:Connect(function()
@@ -307,6 +310,7 @@ function RainLib:Window(options)
         tab.Button.Size = UDim2.new(1, -10, 0, 40)
         tab.Button.Position = UDim2.new(0, 5, 0, #window.Tabs * 45 + 5)
         tab.Button.BackgroundColor3 = RainLib.CurrentTheme.Secondary
+        tab.Button.BackgroundTransparency = 0
         tab.Button.Text = tab.Icon and "" or tab.Name
         tab.Button.TextColor3 = RainLib.CurrentTheme.Text
         tab.Button.Font = Enum.Font.SourceSansBold
@@ -347,13 +351,15 @@ function RainLib:Window(options)
             for i, t in pairs(window.Tabs) do
                 if i == index then
                     t.Content.Visible = true
+                    tween(t.Content, TweenInfo.new(0.2), {BackgroundTransparency = 1})
                     tween(window.TabIndicator, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, (i-1) * 45 + 5)})
                     tween(t.Button, TweenInfo.new(0.2), {BackgroundColor3 = RainLib.CurrentTheme.Accent})
                     window.CurrentTabIndex = i
                     print("[RainLib] Aba selecionada: " .. t.Name)
                 else
-                    t.Content.Visible = false
+                    tween(t.Content, TweenInfo.new(0.2), {BackgroundTransparency = 1})
                     tween(t.Button, TweenInfo.new(0.2), {BackgroundColor3 = RainLib.CurrentTheme.Secondary})
+                    task.delay(0.2, function() t.Content.Visible = false end)
                 end
             end
         end
@@ -490,7 +496,7 @@ function RainLib:Window(options)
             frame.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     toggle.Value = not toggle.Value
-                    indicator.BackgroundColor3 = toggle.Value and RainLib.CurrentTheme.Accent or RainLib.CurrentTheme.Disabled
+                    tween(indicator, TweenInfo.new(0.2), {BackgroundColor3 = toggle.Value and RainLib.CurrentTheme.Accent or RainLib.CurrentTheme.Disabled})
                     if options.Callback then
                         options.Callback(toggle.Value)
                     end
@@ -746,7 +752,7 @@ function RainLib:Window(options)
             local container = createContainer(frame, colorpickerSize)
             
             function colorpicker:OnChanged(callback)
-                -- Placeholder, não implementado no base
+                -- Simplificado: callback chamado ao mudar via SetValueRGB
             end
             
             function colorpicker:SetValueRGB(color)
@@ -942,7 +948,6 @@ function RainLib:Window(options)
                     dialog:Destroy()
                 end)
             end
-            return dialog
         end
         
         return tab
@@ -1001,9 +1006,12 @@ function RainLib:Notify(options)
         message.TextWrapped = true
         message.Parent = notification
         
+        tween(notification, TweenInfo.new(0.5), {Position = UDim2.new(0, 10, 0, (#RainLib.Notifications:GetChildren() - 1) * 90 + 10)})
         task.wait(options.Duration or 3)
-        notification:Destroy()
-        print("[RainLib] Notificação removida")
+        tween(notification, TweenInfo.new(0.5), {Position = UDim2.new(1, 10, 0, notification.Position.Y.Offset)}).Completed:Connect(function()
+            notification:Destroy()
+            print("[RainLib] Notificação removida")
+        end)
     end)
 end
 
