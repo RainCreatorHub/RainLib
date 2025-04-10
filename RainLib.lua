@@ -1,8 +1,9 @@
--- RainLib v1.2.2: Sections tratadas como elementos, 1 elemento por linha, largura dinâmica
+-- RainLib v1.2.2: Biblioteca de interface com suporte a temas, abas e elementos dinâmicos
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local LocalPlayer = game:GetService("Players").LocalPlayer
+local HttpService = game:GetService("HttpService")
 
 local RainLib = {
     Version = "1.2.2",
@@ -19,7 +20,7 @@ local RainLib = {
     Windows = {},
     CurrentTheme = nil,
     Connections = {},
-    CreatedFolders = {} -- Tabela pra rastrear pastas já criadas
+    CreatedFolders = {} -- Tabela para rastrear pastas criadas
 }
 
 local function tween(obj, info, properties)
@@ -28,6 +29,7 @@ local function tween(obj, info, properties)
     return tween
 end
 
+-- Função para tornar um elemento arrastável
 local function MakeDraggable(DragPoint, Main)
     local Dragging, DragInput, MousePos, FramePos = false
     RainLib.Connections[#RainLib.Connections + 1] = DragPoint.InputBegan:Connect(function(Input)
@@ -66,11 +68,6 @@ local success, err = pcall(function()
     RainLib.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
     RainLib.CurrentTheme = RainLib.Themes.Dark
-    RainLib.Notifications = Instance.new("Frame")
-    RainLib.Notifications.Size = UDim2.new(0, 300, 1, -25)
-    RainLib.Notifications.Position = UDim2.new(1, -310, 0, 0)
-    RainLib.Notifications.BackgroundTransparency = 1
-    RainLib.Notifications.Parent = RainLib.ScreenGui
 end)
 if not success then
     warn("[RainLib] Falha na inicialização: " .. err)
@@ -78,53 +75,69 @@ if not success then
 end
 print("[RainLib] Inicializado com sucesso!")
 
--- Função CreateFolder modificada pra usar um único makefolder por pasta
+-- Cria uma pasta e um arquivo Settings.json dentro dela
 function RainLib:CreateFolder(folderName)
     if not folderName or folderName == "" then
         warn("[RainLib] Nome da pasta não especificado!")
         return false
     end
     
-    -- Verifica se a pasta já foi criada nesta sessão
     if self.CreatedFolders[folderName] then
         print("[RainLib] Pasta já registrada nesta sessão: " .. folderName)
         return false
     end
     
-    if makefolder then
+    if makefolder and writefile then
         if not isfolder(folderName) then
             makefolder(folderName)
-            self.CreatedFolders[folderName] = true -- Marca como criada
+            self.CreatedFolders[folderName] = true
             print("[RainLib] Pasta criada: " .. folderName)
-            self:Notify({
-                Title = "Sucesso",
-                Content = "Pasta '" .. folderName .. "' criada!",
-                Duration = 3
-            })
+            self:Notify(nil, {Title = "Sucesso", Content = "Pasta '" .. folderName .. "' criada!", Duration = 3})
+            
+            local settingsPath = folderName .. "/Settings.json"
+            local defaultSettings = {
+                Theme = "Dark",
+                WindowPosition = {X = 0.5, Y = 0.5, XOffset = -300, YOffset = -200},
+                MinimizeKey = "LeftControl",
+                SaveSettings = false
+            }
+            local jsonSettings = HttpService:JSONEncode(defaultSettings)
+            writefile(settingsPath, jsonSettings)
+            print("[RainLib] Arquivo 'Settings.json' criado em: " .. settingsPath)
+            self:Notify(nil, {Title = "Sucesso", Content = "Arquivo 'Settings.json' criado em '" .. folderName .. "'!", Duration = 3})
             return true
         else
-            self.CreatedFolders[folderName] = true -- Marca como existente
+            self.CreatedFolders[folderName] = true
             print("[RainLib] Pasta já existe: " .. folderName)
-            self:Notify({
-                Title = "Aviso",
-                Content = "A pasta '" .. folderName .. "' já existe!",
-                Duration = 3
-            })
+            self:Notify(nil, {Title = "Aviso", Content = "A pasta '" .. folderName .. "' já existe!", Duration = 3})
+            
+            local settingsPath = folderName .. "/Settings.json"
+            if not isfile(settingsPath) then
+                local defaultSettings = {
+                    Theme = "Dark",
+                    WindowPosition = {X = 0.5, Y = 0.5, XOffset = -300, YOffset = -200},
+                    MinimizeKey = "LeftControl",
+                    SaveSettings = false
+                }
+                local jsonSettings = HttpService:JSONEncode(defaultSettings)
+                writefile(settingsPath, jsonSettings)
+                print("[RainLib] Arquivo 'Settings.json' criado em: " .. settingsPath)
+                self:Notify(nil, {Title = "Sucesso", Content = "Arquivo 'Settings.json' criado em '" .. folderName .. "'!", Duration = 3})
+            end
             return false
         end
     else
-        warn("[RainLib] Este executor não suporta a função makefolder!")
-        self:Notify({
-            Title = "Erro",
-            Content = "Executor não suporta criação de pastas!",
-            Duration = 3
-        })
+        warn("[RainLib] Este executor não suporta makefolder ou writefile!")
+        self:Notify(nil, {Title = "Erro", Content = "Executor não suporta criação de pastas ou arquivos!", Duration = 3})
         return false
     end
 end
 
+-- Cria uma nova janela
+-- @param options (table): {Title (string), SubTitle (string), Position (UDim2), Theme (string), MinimizeKey (Enum.KeyCode), SaveSettings (boolean), ConfigFolder (string)}
+-- @return window (table): Objeto da janela com métodos
 function RainLib:Window(options)
-    local window = {}
+    local window = { Windows = {}, Notifications = Instance.new("Frame") }
     options = options or {}
     local defaultOptions = {
         Title = "Rain Lib",
@@ -132,15 +145,19 @@ function RainLib:Window(options)
         Position = UDim2.new(0.5, -300, 0.5, -200),
         Theme = "Dark",
         MinimizeKey = Enum.KeyCode.LeftControl,
-        SaveSettings = false,        -- Opção pra ativar criação de pasta
-        ConfigFolder = "RainConfig"  -- Nome padrão da pasta
+        SaveSettings = false,
+        ConfigFolder = "RainConfig"
     }
     window.Options = {}
     for key, defaultValue in pairs(defaultOptions) do
         window.Options[key] = options[key] or defaultValue
     end
     
-    -- Cria a pasta automaticamente se SaveSettings for true
+    window.Notifications.Size = UDim2.new(0, 300, 1, -25)
+    window.Notifications.Position = UDim2.new(1, -310, 0, 0)
+    window.Notifications.BackgroundTransparency = 1
+    window.Notifications.Parent = RainLib.ScreenGui
+    
     if window.Options.SaveSettings then
         RainLib:CreateFolder(window.Options.ConfigFolder)
     end
@@ -261,6 +278,7 @@ function RainLib:Window(options)
         tween(window.MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(0.5, -300, 0.5, 300), BackgroundTransparency = 1}).Completed:Connect(function()
             if window.MinimizeButton then window.MinimizeButton:Destroy() end
             window.MainFrame:Destroy()
+            window.Notifications:Destroy()
             print("[RainLib] Janela destruída")
         end)
     end)
@@ -292,6 +310,9 @@ function RainLib:Window(options)
         end)
     end
     
+    -- Cria um botão de minimizar externo
+    -- @param options (table): {Text1 (string), Text2 (string), CornerRadius (UDim), Draggable (boolean)}
+    -- @return button (TextButton): Botão criado
     function window:Minimize(options)
         options = options or {}
         local button
@@ -350,6 +371,9 @@ function RainLib:Window(options)
         return button
     end
     
+    -- Cria uma nova aba na janela
+    -- @param options (table): {Title (string), Icon (string)}
+    -- @return tab (table): Objeto da aba com métodos
     function window:Tab(options)
         local tab = {}
         options = options or {}
@@ -471,19 +495,18 @@ function RainLib:Window(options)
             return container
         end
         
-        RunService.RenderStepped:Connect(function(deltaTime)
-            local currentTime = tick()
-            if currentTime - (tab.LastUpdate or 0) >= 0.04 then
-                tab.LastUpdate = currentTime
-                local contentWidth = tab.Content.AbsoluteSize.X - 20
-                for _, elem in pairs(tab.Elements) do
-                    local newWidth = contentWidth - 20
-                    elem.container.Size = UDim2.new(0, newWidth, 0, elem.container.Size.Y.Offset)
-                    elem.element.Size = UDim2.new(0, newWidth - 20, 0, elem.element.Size.Y.Offset)
-                end
+        tab.Content:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+            local contentWidth = tab.Content.AbsoluteSize.X - 20
+            for _, elem in pairs(tab.Elements) do
+                local newWidth = contentWidth - 20
+                elem.container.Size = UDim2.new(0, newWidth, 0, elem.container.Size.Y.Offset)
+                elem.element.Size = UDim2.new(0, newWidth - 20, 0, elem.element.Size.Y.Offset)
             end
         end)
         
+        -- Adiciona uma seção à aba
+        -- @param name (string): Nome da seção
+        -- @return section (TextLabel): Elemento da seção
         function tab:AddSection(name)
             local sectionSize = UDim2.new(0, 420, 0, 30)
             local sectionContainer = Instance.new("Frame")
@@ -515,6 +538,9 @@ function RainLib:Window(options)
             return section
         end
         
+        -- Adiciona um parágrafo à aba
+        -- @param options (table): {Title (string), Content (string)}
+        -- @return frame (Frame): Container do parágrafo
         function tab:AddParagraph(options)
             local paragraphSize = UDim2.new(0, 120, 0, 40)
             local frame = Instance.new("Frame")
@@ -547,6 +573,9 @@ function RainLib:Window(options)
             return frame
         end
         
+        -- Adiciona um botão à aba
+        -- @param options (table): {Title (string), Callback (function)}
+        -- @return button (TextButton): Botão criado
         function tab:AddButton(options)
             local buttonSize = UDim2.new(0, 120, 0, 40)
             local button = Instance.new("TextButton")
@@ -578,6 +607,10 @@ function RainLib:Window(options)
             return button
         end
         
+        -- Adiciona um toggle à aba
+        -- @param key (string): Identificador único
+        -- @param options (table): {Title (string), Default (boolean), Callback (function)}
+        -- @return toggle (table): Objeto toggle com métodos
         function tab:AddToggle(key, options)
             local toggleSize = UDim2.new(0, 120, 0, 40)
             local toggle = { Value = options.Default or false }
@@ -634,6 +667,10 @@ function RainLib:Window(options)
             return toggle
         end
         
+        -- Adiciona um slider à aba
+        -- @param key (string): Identificador único
+        -- @param options (table): {Title (string), Min (number), Max (number), Default (number), Rounding (number), Callback (function)}
+        -- @return slider (table): Objeto slider com métodos
         function tab:AddSlider(key, options)
             local sliderSize = UDim2.new(0, 120, 0, 40)
             local slider = { Value = options.Default or options.Min or 0 }
@@ -735,6 +772,10 @@ function RainLib:Window(options)
             return slider
         end
         
+        -- Adiciona um dropdown à aba
+        -- @param key (string): Identificador único
+        -- @param options (table): {Default (any), Multi (boolean), Values (table), Callback (function)}
+        -- @return dropdown (table): Objeto dropdown com métodos
         function tab:AddDropdown(key, options)
             local dropdownSize = UDim2.new(0, 120, 0, 40)
             local dropdown = { Value = options.Default or (options.Multi and {} or options.Values[1]) }
@@ -856,19 +897,23 @@ function RainLib:Window(options)
             return dropdown
         end
         
+        -- Adiciona um colorpicker à aba
+        -- @param key (string): Identificador único
+        -- @param options (table): {Title (string), Default (Color3), Callback (function)}
+        -- @return colorpicker (table): Objeto colorpicker com métodos
         function tab:AddColorpicker(key, options)
-            local colorpickerSize = UDim2.new(0, 120, 0, 40)
+            local colorpickerSize = UDim2.new(0, 120, 0, 120)
             local colorpicker = { Value = options.Default or Color3.fromRGB(255, 255, 255) }
             local frame = Instance.new("Frame")
             frame.Size = colorpickerSize
-            frame.BackgroundColor3 = colorpicker.Value
+            frame.BackgroundColor3 = RainLib.CurrentTheme.Secondary
             
             local corner = Instance.new("UICorner")
             corner.CornerRadius = UDim.new(0, 8)
             corner.Parent = frame
             
             local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(0, 80, 1, 0)
+            label.Size = UDim2.new(0, 80, 0, 20)
             label.Text = options.Title or "Colorpicker"
             label.BackgroundTransparency = 1
             label.TextColor3 = RainLib.CurrentTheme.Text
@@ -876,32 +921,60 @@ function RainLib:Window(options)
             label.TextSize = 14
             label.Parent = frame
             
-            createContainer(frame, colorpickerSize)
+            local preview = Instance.new("Frame")
+            preview.Size = UDim2.new(0, 30, 0, 30)
+            preview.Position = UDim2.new(1, -40, 0, 5)
+            preview.BackgroundColor3 = colorpicker.Value
+            preview.Parent = frame
             
-            frame.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    local r = math.random(0, 255)
-                    local g = math.random(0, 255)
-                    local b = math.random(0, 255)
-                    colorpicker:SetValueRGB(Color3.fromRGB(r, g, b))
-                end
+            local rSlider = tab:AddSlider("R", {Min = 0, Max = 255, Default = math.floor(colorpicker.Value.R * 255), Rounding = 1})
+            rSlider.element.Position = UDim2.new(0, 10, 0, 40)
+            rSlider:OnChanged(function(value)
+                colorpicker.Value = Color3.fromRGB(value, math.floor(colorpicker.Value.G * 255), math.floor(colorpicker.Value.B * 255))
+                preview.BackgroundColor3 = colorpicker.Value
+                if options.Callback then options.Callback(colorpicker.Value) end
             end)
             
+            local gSlider = tab:AddSlider("G", {Min = 0, Max = 255, Default = math.floor(colorpicker.Value.G * 255), Rounding = 1})
+            gSlider.element.Position = UDim2.new(0, 10, 0, 70)
+            gSlider:OnChanged(function(value)
+                colorpicker.Value = Color3.fromRGB(math.floor(colorpicker.Value.R * 255), value, math.floor(colorpicker.Value.B * 255))
+                preview.BackgroundColor3 = colorpicker.Value
+                if options.Callback then options.Callback(colorpicker.Value) end
+            end)
+            
+            local bSlider = tab:AddSlider("B", {Min = 0, Max = 255, Default = math.floor(colorpicker.Value.B * 255), Rounding = 1})
+            bSlider.element.Position = UDim2.new(0, 10, 0, 100)
+            bSlider:OnChanged(function(value)
+                colorpicker.Value = Color3.fromRGB(math.floor(colorpicker.Value.R * 255), math.floor(colorpicker.Value.G * 255), value)
+                preview.BackgroundColor3 = colorpicker.Value
+                if options.Callback then options.Callback(colorpicker.Value) end
+            end)
+            
+            createContainer(frame, colorpickerSize)
+            
             function colorpicker:OnChanged(callback)
-                -- Placeholder pra callback
+                rSlider:OnChanged(callback)
+                gSlider:OnChanged(callback)
+                bSlider:OnChanged(callback)
             end
             
             function colorpicker:SetValueRGB(color)
                 colorpicker.Value = color
-                tween(frame, TweenInfo.new(0.2), {BackgroundColor3 = color})
-                if options.Callback then
-                    options.Callback(color)
-                end
+                rSlider:SetValue(math.floor(color.R * 255))
+                gSlider:SetValue(math.floor(color.G * 255))
+                bSlider:SetValue(math.floor(color.B * 255))
+                preview.BackgroundColor3 = color
+                if options.Callback then options.Callback(color) end
             end
             
             return colorpicker
         end
         
+        -- Adiciona um keybind à aba
+        -- @param key (string): Identificador único
+        -- @param options (table): {Title (string), Default (string), Mode (string), Callback (function), ChangedCallback (function)}
+        -- @return keybind (table): Objeto keybind com métodos
         function tab:AddKeybind(key, options)
             local keybindSize = UDim2.new(0, 120, 0, 40)
             local keybind = { Value = options.Default or "None", Mode = options.Mode or "Toggle" }
@@ -995,6 +1068,10 @@ function RainLib:Window(options)
             return keybind
         end
         
+        -- Adiciona um campo de entrada à aba
+        -- @param key (string): Identificador único
+        -- @param options (table): {Default (string), Placeholder (string), Numeric (boolean), Callback (function)}
+        -- @return input (table): Objeto input com métodos
         function tab:AddInput(key, options)
             local inputSize = UDim2.new(0, 120, 0, 40)
             local input = { Value = options.Default or "" }
@@ -1043,6 +1120,8 @@ function RainLib:Window(options)
             return input
         end
         
+        -- Cria um diálogo na aba
+        -- @param options (table): {Title (string), Content (string), Buttons (table)}
         function tab:Dialog(options)
             local dialog = Instance.new("Frame")
             dialog.Size = UDim2.new(0, 300, 0, 150)
@@ -1125,6 +1204,9 @@ function RainLib:Window(options)
         return tab
     end
     
+    -- Define uma opção da janela
+    -- @param key (string): Nome da opção
+    -- @param value (any): Valor da opção
     function window:SetOption(key, value)
         if defaultOptions[key] ~= nil then
             window.Options[key] = value
@@ -1144,14 +1226,27 @@ function RainLib:Window(options)
     return window
 end
 
-function RainLib:Notify(options)
+-- Cria uma notificação
+-- @param window (table): Janela associada (nil para global)
+-- @param options (table): {Title (string), Content (string), Duration (number)}
+function RainLib:Notify(window, options)
+    local notification
+    local targetNotifications = window and window.Notifications or RainLib.ScreenGui:FindFirstChild("Notifications") or Instance.new("Frame")
+    if not targetNotifications.Parent then
+        targetNotifications.Size = UDim2.new(0, 300, 1, -25)
+        targetNotifications.Position = UDim2.new(1, -310, 0, 0)
+        targetNotifications.BackgroundTransparency = 1
+        targetNotifications.Name = "Notifications"
+        targetNotifications.Parent = RainLib.ScreenGui
+    end
+    
     local success, err = pcall(function()
-        local notification = Instance.new("Frame")
+        notification = Instance.new("Frame")
         notification.Size = UDim2.new(0, 280, 0, 80)
-        notification.Position = UDim2.new(1, 300, 0, (#RainLib.Notifications:GetChildren() - 1) * 90 + 10)
+        notification.Position = UDim2.new(1, 300, 0, (#targetNotifications:GetChildren() - 1) * 90 + 10)
         notification.BackgroundColor3 = RainLib.CurrentTheme.Background
         notification.BackgroundTransparency = 1
-        notification.Parent = RainLib.Notifications
+        notification.Parent = targetNotifications
         
         local corner = Instance.new("UICorner")
         corner.CornerRadius = UDim.new(0, 8)
@@ -1189,14 +1284,22 @@ function RainLib:Notify(options)
         message.TextWrapped = true
         message.Parent = notification
         
-        tween(notification, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(1, -290, 0, (#RainLib.Notifications:GetChildren() - 1) * 90 + 10), BackgroundTransparency = 0})
-        task.wait(options.Duration or 3)
-        tween(notification, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(1, 300, 0, notification.Position.Y.Offset), BackgroundTransparency = 1}).Completed:Connect(function()
-            notification:Destroy()
-        end)
+        tween(notification, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(1, -290, 0, (#targetNotifications:GetChildren() - 1) * 90 + 10), BackgroundTransparency = 0})
     end)
+    if success then
+        task.spawn(function()
+            task.wait(options.Duration or 3)
+            tween(notification, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(1, 300, 0, notification.Position.Y.Offset), BackgroundTransparency = 1}).Completed:Connect(function()
+                notification:Destroy()
+            end)
+        end)
+    else
+        warn("[RainLib] Falha ao criar notificação: " .. err)
+    end
 end
 
+-- Define o tema da biblioteca
+-- @param theme (table): Tabela de cores do tema
 function RainLib:SetTheme(theme)
     local success, err = pcall(function()
         RainLib.CurrentTheme = theme
@@ -1234,6 +1337,7 @@ function RainLib:SetTheme(theme)
     end)
 end
 
+-- Destrói a biblioteca e limpa recursos
 function RainLib:Destroy()
     for _, conn in pairs(RainLib.Connections) do
         conn:Disconnect()
