@@ -12,10 +12,15 @@ local RainLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/RainC
 ```
  Window 
  
-```Lua
+``` lua
 local window = RainLib:Window({
-    Title = "Rain Lib!",
-    Subtitle = "Rain Lib! Yes", -- Sem opção ainda
+    Title = "Meu Menu",
+    SubTitle = "Bem-vindo ao meu script!",
+    Position = UDim2.new(0.5, -300, 0.5, -200),
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl,
+    SaveSettings = true,
+    ConfigFolder = "MeuScriptConfig"
 })
 ```
 
