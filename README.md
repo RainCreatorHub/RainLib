@@ -12,7 +12,9 @@
 ## como usar
 
  * use o "SaveSettings = true," para salvar e criar as pastas de configurações
+ 
  * agora use o "ConfigFolder = "MeuScriptConfig"" para definir o nome da pasta de configurações
+   
  * use as opções que contém "Flag = "MinhaFlag"," e pronto
 
 #### RainLib
