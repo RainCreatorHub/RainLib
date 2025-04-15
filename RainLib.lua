@@ -5,7 +5,7 @@ local LocalPlayer = game:GetService("Players").LocalPlayer
 local HttpService = game:GetService("HttpService")
 
 local RainLib = {
-    Version = "1.2.3",
+    Version = "1.1.3",
     Themes = {
         Dark = {
             Background = Color3.fromRGB(25, 25, 25),
@@ -13,27 +13,6 @@ local RainLib = {
             Text = Color3.fromRGB(240, 240, 240),
             Secondary = Color3.fromRGB(45, 45, 45),
             Disabled = Color3.fromRGB(90, 90, 90)
-        },
-        dark = {
-            Background = Color3.fromRGB(25, 25, 25),
-            Accent = Color3.fromRGB(60, 160, 255),
-            Text = Color3.fromRGB(240, 240, 240),
-            Secondary = Color3.fromRGB(45, 45, 45),
-            Disabled = Color3.fromRGB(90, 90, 90)
-        },
-        Light = {
-            Background = Color3.fromRGB(245, 245, 245),
-            Accent = Color3.fromRGB(0, 120, 215),
-            Text = Color3.fromRGB(30, 30, 30),
-            Secondary = Color3.fromRGB(220, 220, 220),
-            Disabled = Color3.fromRGB(150, 150, 150)
-        },
-        light = {
-            Background = Color3.fromRGB(245, 245, 245),
-            Accent = Color3.fromRGB(0, 120, 215),
-            Text = Color3.fromRGB(30, 30, 30),
-            Secondary = Color3.fromRGB(220, 220, 220),
-            Disabled = Color3.fromRGB(150, 150, 150)
         }
     },
     CurrentTheme = nil,
