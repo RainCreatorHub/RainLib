@@ -49,14 +49,22 @@ local mainTab = window:Tab({
 mainTab:AddSection("section")
 ```
 
+ paragraph
+
+``` lua
+mainTab:AddParagraph({
+    Title = "Olaa",
+    Content = "Ola"
+})
+```
+
  Button
 
 ``` Lua
-mainTab:Button({
-    Text = "Testar",           -- Texto no botão
-    Size = UDim2.new(1, -20, 0, 30), -- Largura ajustada, altura fixa
-    Callback = function()      -- Função ao clicar
-        print("Clicado!")
+mainTab:AddButton({
+    Title = "Testar Botão",
+    Callback = function()
+        print("Botão clicado!")
     end
 })
 ```
@@ -64,10 +72,12 @@ mainTab:Button({
  checkBox
 
 ``` Lua
-local toggle = tab:AddToggle("Toggle", {
-    Title = "Ola",
-    Default = true, -- Começa ligado
+mainTab:AddToggle("teste_toggle", {
+    Title = "Ligar Algo",
+    Default = false,
+    Flag = "ToggleTeste",
     Callback = function(value)
+        print("Toggle:", value)
     end
 })
 ```
@@ -76,10 +86,9 @@ local toggle = tab:AddToggle("Toggle", {
 
 ``` Lua
 mainTab:Textbox({
-    Text = "Digite aqui",      -- Texto inicial
-    Size = UDim2.new(1, -20, 0, 30), -- Tamanho
+    Text = "Digite aqui",
     BackgroundColor3 = Color3.fromRGB(0, 120, 215), -- Cor de fundo
-    Callback = function(text)  -- Função ao pressionar Enter
+    Callback = function(text)
         print("Texto: " .. text)
     end
 })
@@ -89,11 +98,11 @@ mainTab:Textbox({
 
 ``` Lua
 mainTab:Slider({
-    Text = "Volume",           -- Texto acima
-    Size = UDim2.new(1, -20, 0, 40), -- Tamanho
-    Default = 50,              -- Valor inicial
-    Max = 100,                 -- Valor máximo
-    Callback = function(value) -- Função ao ajustar
+    Text = "Volume",
+    Default = 50,
+    Max = 100,
+    Flag = "SliderTest",
+    Callback = function(value)
         print("Volume: " .. value)
     end
 })
@@ -102,15 +111,29 @@ mainTab:Slider({
  Dropdown
 
 ``` Lua
-mainTab:Dropdown({
-    Size = UDim2.new(1, -20, 0, 30), -- Tamanho
-    Options = {"Fácil", "Médio", "Difícil"}, -- Opções
-    Default = "Fácil",         -- Opção inicial
-    Callback = function(value) -- Função ao selecionar
-        print("Selecionado: " .. value)
+local dropdown = mainTab:AddDropdown("tema_dropdown", {
+    Title = "Tema",
+    Items = {"Dark", "Light", "light"},
+    Default = "Dark",
+    Flag = "TemaEscolhido",
+    Callback = function(value) 
     end
 })
 ```
+
+ ColorPicker
+
+``` lua
+mainTab:AddColorpicker("teste_color", {
+    Title = "Cor",
+    Default = Color3.fromRGB(255, 0, 0),
+    Flag = "ColorTeste",
+    Callback = function(color)
+        print("Cor:", color)
+    end
+})
+```
+
  notificação 
 
 ``` Lua
@@ -126,44 +149,64 @@ RainLib:Notify({
 ``` Lua
 local RainLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/RainCreatorHub/RainLib/main/RainLib.lua"))()
 
--- Cria a janela
 local window = RainLib:Window({
-    Title = "Rain Lib!",
-    Size = UDim2.new(0, 500, 0, 350)
+    Title = "Meu Menu",
+    SubTitle = "Bem-vindo ao meu script!",
+    Position = UDim2.new(0.5, -300, 0.5, -200),
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl,
+    SaveSettings = true,
+    ConfigFolder = "MeuScriptConfig"
+})
+
+local window:Minimize({
+    Text1 = "Close",
+    Text2 = "Open",
+    Draggable = true
 })
 
 -- Cria uma aba
 local mainTab = window:Tab({
     Name = "Main",
     Icon = "home",
-    ElementsPerRow = 1
 })
 
 mainTab:AddSection("sla1")
 
--- Elementos
-mainTab:Button({
-    Text = "Testar",
-    Size = UDim2.new(1, -20, 0, 30),
+mainTab:AddButton({
+    Title = "Testar Botão",
     Callback = function()
-        print("Clicado!")
+        print("Botão clicado!")
     end
+})
+
+mainTab:AddColorpicker("teste_color", {
+    Title = "Cor",
+    Default = Color3.fromRGB(255, 0, 0),
+    Flag = "ColorTeste",
+    Callback = function(color)
+        print("Cor:", color)
+    end
+})
+
+mainTab:AddParagraph({
+    Title = "Olaa",
+    Content = "Ola"
 })
 
 mainTab:AddSection("sla2")
 
-mainTab:Toggle({
-    Text = "Ativar",
-    Size = UDim2.new(1, -20, 0, 30),
+mainTab:AddToggle("teste_toggle", {
+    Title = "Ligar Algo",
     Default = false,
+    Flag = "ToggleTeste",
     Callback = function(value)
-        print("Toggle: " .. tostring(value))
+        print("Toggle:", value)
     end
 })
 
 mainTab:Textbox({
     Text = "Digite aqui",
-    Size = UDim2.new(1, -20, 0, 30),
     Callback = function(text)
         print("Texto: " .. text)
     end
@@ -171,20 +214,20 @@ mainTab:Textbox({
 
 mainTab:Slider({
     Text = "Volume",
-    Size = UDim2.new(1, -20, 0, 40),
     Default = 50,
     Max = 100,
+    Flag = "SliderTest",
     Callback = function(value)
         print("Volume: " .. value)
     end
 })
 
-mainTab:Dropdown({
-    Size = UDim2.new(1, -20, 0, 30),
-    Options = {"Fácil", "Médio", "Difícil"},
-    Default = "Fácil",
-    Callback = function(value)
-        print("Selecionado: " .. value)
+local dropdown = mainTab:AddDropdown("tema_dropdown", {
+    Title = "Tema",
+    Items = {"Dark", "Light", "light"},
+    Default = "Dark",
+    Flag = "TemaEscolhido",
+    Callback = function(value) 
     end
 })
 
@@ -192,12 +235,5 @@ RainLib:Notify({
     Title = "Bem-vindo",
     Message = "Interface carregada!",
     Duration = 5
-})
-
--- Botão de minimizar
-window:Minimize({
-    Text1 = "Close",
-    Text2 = "Open",
-    Draggable = true
 })
 ```
