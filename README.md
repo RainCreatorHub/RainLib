@@ -4,6 +4,17 @@
 
 **Rain Library** é uma biblioteca de interface de usuário (UI) para Roblox, escrita em Lua/Luau, projetada para criar interfaces gráficas modernas diretamente no jogo. Com ela, você pode adicionar janelas, abas e elementos como botões, toggles, caixas de texto, sliders, dropdowns, sessões e notificações usando um executor de scripts Roblox.
 
+## Oque foi adicionado
+
+ * Auto load config
+ * Auto save config
+
+## como usar
+
+ * use o "SaveSettings = true," para salvar e criar as pastas de configurações
+ * agora use o "ConfigFolder = "MeuScriptConfig"" para definir o nome da pasta de configurações
+ * use as opções que contém "Flag = "MinhaFlag"," e pronto
+
 #### RainLib
 
  Load
@@ -15,8 +26,7 @@ local RainLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/RainC
 ``` lua
 local window = RainLib:Window({
     Title = "Meu Menu",
-    SubTitle = "Bem-vindo ao meu script!",
-    Position = UDim2.new(0.5, -300, 0.5, -200),
+    SubTitle = "Bem-vindo(a)",
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.LeftControl,
     SaveSettings = true,
@@ -28,9 +38,9 @@ local window = RainLib:Window({
 
 ``` Lua
 window:Minimize({
-    Text1 = "Close",           -- Texto quando a janela está visível
-    Text2 = "Open",            -- Texto quando a janela está minimizada
-    Draggable = true           -- Permite arrastar o botão
+    Text1 = "Close",
+    Text2 = "Open",
+    Draggable = true
 })
 ```
 
