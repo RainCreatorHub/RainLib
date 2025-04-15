@@ -36,7 +36,7 @@ local window = RainLib:Window({
 })
 ```
 
- minimize
+ minimize ( erro )
 
 ``` Lua
 window:Minimize({
