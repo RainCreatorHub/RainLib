@@ -5,7 +5,7 @@ local LocalPlayer = game:GetService("Players").LocalPlayer
 local HttpService = game:GetService("HttpService")
 
 local RainLib = {
-    Version = "1.1.4",
+    Version = "1.1.3",
     Themes = {
         Dark = {
             Background = Color3.fromRGB(25, 25, 25),
@@ -18,26 +18,27 @@ local RainLib = {
     CurrentTheme = nil,
     CreatedFolders = {},
     GUIState = { Windows = {} },
-    Connections = {} -- Store event connections for cleanup
+    Icons = {}, -- Tabela para armazenar ícones
+    Connections = {} -- Para gerenciar conexões
 }
 
--- Centralized tween function
-local function tween(obj, properties, info)
-    info = info or TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-    local t = TweenService:Create(obj, info, properties)
+-- Função auxiliar para animações
+local function tween(obj, info, properties)
+    local t = TweenService:Create(obj, info or TweenInfo.new(0.3, Enum.EasingStyle.Quint), properties)
     t:Play()
     return t
 end
 
--- Make a frame draggable
+-- Função para arrastar elementos
 local function MakeDraggable(DragPoint, Main)
     local Dragging, DragInput, MousePos, FramePos
+    local connection
     DragPoint.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             Dragging = true
             MousePos = input.Position
             FramePos = Main.Position
-            tween(DragPoint, {BackgroundColor3 = RainLib.CurrentTheme.Accent:Lerp(Color3.fromRGB(255, 255, 255), 0.1)})
+            tween(DragPoint, nil, {BackgroundColor3 = RainLib.CurrentTheme.Accent:Lerp(Color3.fromRGB(255, 255, 255), 0.1)})
         end
     end)
     DragPoint.InputChanged:Connect(function(input)
@@ -45,7 +46,7 @@ local function MakeDraggable(DragPoint, Main)
             DragInput = input
         end
     end)
-    local connection = UserInputService.InputChanged:Connect(function(input)
+    connection = UserInputService.InputChanged:Connect(function(input)
         if input == DragInput and Dragging then
             local Delta = input.Position - MousePos
             Main.Position = UDim2.new(FramePos.X.Scale, FramePos.X.Offset + Delta.X, FramePos.Y.Scale, FramePos.Y.Offset + Delta.Y)
@@ -55,13 +56,13 @@ local function MakeDraggable(DragPoint, Main)
     DragPoint.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             Dragging = false
-            tween(DragPoint, {BackgroundColor3 = RainLib.CurrentTheme.Secondary})
+            tween(DragPoint, nil, {BackgroundColor3 = RainLib.CurrentTheme.Secondary})
         end
     end)
 end
 
--- Initialize RainLib
-print("[RainLib] Initializing...")
+-- Inicialização
+print("[RainLib] Inicializando...")
 local success, err = pcall(function()
     RainLib.ScreenGui = Instance.new("ScreenGui")
     RainLib.ScreenGui.Name = "RainLib"
@@ -71,15 +72,38 @@ local success, err = pcall(function()
     RainLib.CurrentTheme = RainLib.Themes.Dark
 end)
 if not success then
-    warn("[RainLib] Initialization failed: " .. err)
+    warn("[RainLib] Falha na inicialização: " .. err)
     return nil
 end
-print("[RainLib] Initialized successfully!")
+print("[RainLib] Inicializado com sucesso!")
 
--- Create a folder for settings
+-- Função para carregar ícones via loadstring
+function RainLib:LoadIcons(url)
+    local success, result = pcall(function()
+        local iconData = loadstring(game:HttpGet(url))()
+        if type(iconData) == "table" then
+            RainLib.Icons = iconData
+            RainLib:Notify(nil, { Title = "Ícones Carregados", Content = "Ícones carregados com sucesso!", Duration = 3 })
+            return true
+        end
+        return false
+    end)
+    if not success then
+        warn("[RainLib] Falha ao carregar ícones: " .. result)
+        return false
+    end
+    return result
+end
+
+-- Função para obter ID de ícone por nome
+function RainLib:GetIcon(iconName)
+    return RainLib.Icons[iconName] or "rbxassetid://0"
+end
+
+-- Função para criar pastas
 function RainLib:CreateFolder(folderName)
     if not folderName or folderName == "" then
-        warn("[RainLib] Folder name not specified!")
+        warn("[RainLib] Nome da pasta não especificado!")
         return false
     end
     if makefolder and writefile and not self.CreatedFolders[folderName] then
@@ -88,11 +112,11 @@ function RainLib:CreateFolder(folderName)
                 makefolder(folderName)
                 local settingsPath = folderName .. "/Settings.json"
                 writefile(settingsPath, HttpService:JSONEncode({ Theme = "Dark", Flags = {} }))
-                self:Notify(nil, { Title = "Success", Content = "Folder '" .. folderName .. "' created!", Duration = 3 })
+                self:Notify(nil, { Title = "Sucesso", Content = "Pasta '" .. folderName .. "' criada!", Duration = 3 })
             end
         end)
         if not success then
-            warn("[RainLib] Failed to create folder: " .. err)
+            warn("[RainLib] Falha ao criar pasta: " .. err)
             return false
         end
         self.CreatedFolders[folderName] = true
@@ -101,41 +125,30 @@ function RainLib:CreateFolder(folderName)
     return false
 end
 
--- Save settings to file
+-- Funções para salvar/carregar configurações
 function RainLib:SaveSettings(folderName, settings)
-    if not (isfolder(folderName) and writefile) then return end
-    local success, err = pcall(function()
-        local current = isfile(folderName .. "/Settings.json") and HttpService:JSONDecode(readfile(folderName .. "/Settings.json")) or {}
-        if HttpService:JSONEncode(current) ~= HttpService:JSONEncode(settings) then
-            writefile(folderName .. "/Settings.json", HttpService:JSONEncode(settings))
-        end
-    end)
-    if not success then
-        warn("[RainLib] Failed to save settings: " .. err)
+    if isfolder(folderName) and writefile then
+        writefile(folderName .. "/Settings.json", HttpService:JSONEncode(settings))
     end
 end
 
--- Load settings from file
 function RainLib:LoadSettings(folderName)
-    if not (isfolder(folderName) and isfile(folderName .. "/Settings.json")) then return nil end
-    local success, settings = pcall(function()
-        return HttpService:JSONDecode(readfile(folderName .. "/Settings.json"))
-    end)
-    if not success then
-        warn("[RainLib] Failed to load settings: " .. settings)
-        return nil
+    if isfolder(folderName) and isfile(folderName .. "/Settings.json") then
+        local success, settings = pcall(function()
+            return HttpService:JSONDecode(readfile(folderName .. "/Settings.json"))
+        end)
+        return success and settings or nil
     end
-    return settings
+    return nil
 end
 
--- Create a notification
+-- Função para notificações
 function RainLib:Notify(window, options)
     local target = window and window.Notifications or RainLib.ScreenGui
     local notification = Instance.new("Frame")
     notification.Size = UDim2.new(0, 250, 0, 70)
     notification.Position = UDim2.new(1, 260, 0, (#target:GetChildren() - 1) * 80 + 10)
     notification.BackgroundColor3 = RainLib.CurrentTheme.Background
-    notification.BackgroundTransparency = 1
     notification.Parent = target
 
     local corner = Instance.new("UICorner")
@@ -156,7 +169,7 @@ function RainLib:Notify(window, options)
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(1, -10, 0, 20)
     title.Position = UDim2.new(0, 5, 0, 5)
-    title.Text = options.Title or "Notification"
+    title.Text = options.Title or "Notificação"
     title.BackgroundTransparency = 1
     title.TextColor3 = RainLib.CurrentTheme.Text
     title.Font = Enum.Font.GothamBold
@@ -174,16 +187,72 @@ function RainLib:Notify(window, options)
     message.TextWrapped = true
     message.Parent = notification
 
-    tween(notification, { Position = UDim2.new(1, -260, 0, notification.Position.Y.Offset), BackgroundTransparency = 0 }, TweenInfo.new(0.5))
+    tween(notification, TweenInfo.new(0.5), { Position = UDim2.new(1, -260, 0, notification.Position.Y.Offset), BackgroundTransparency = 0 })
     task.spawn(function()
         task.wait(options.Duration or 3)
-        tween(notification, { Position = UDim2.new(1, 260, 0, notification.Position.Y.Offset), BackgroundTransparency = 1 }, TweenInfo.new(0.5)).Completed:Connect(function()
+        tween(notification, TweenInfo.new(0.5), { Position = UDim2.new(1, 260, 0, notification.Position.Y.Offset), BackgroundTransparency = 1 }).Completed:Connect(function()
             notification:Destroy()
         end)
     end)
 end
 
--- Create a window
+-- Função flutuante MakeWindow:Minimize
+function RainLib:MakeWindowMinimize(window, options)
+    options = options or {}
+    local minimizeOptions = {
+        Text1 = options.Text1 or "Close",
+        Text2 = options.Text2 or "Open",
+        Draggable = options.Draggable ~= false,
+        Position = options.Position or UDim2.new(0, 10, 0, 10),
+        Size = options.Size or UDim2.new(0, 60, 0, 30)
+    }
+
+    local floatButton = Instance.new("TextButton")
+    floatButton.Size = minimizeOptions.Size
+    floatButton.Position = minimizeOptions.Position
+    floatButton.BackgroundColor3 = RainLib.CurrentTheme.Accent
+    floatButton.Text = window.Minimized and minimizeOptions.Text2 or minimizeOptions.Text1
+    floatButton.TextColor3 = RainLib.CurrentTheme.Text
+VE    floatButton.Font = Enum.Font.SourceSansBold
+    floatButton.TextSize = 14
+    floatButton.Parent = RainLib.ScreenGui
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = floatButton
+
+    if minimizeOptions.Draggable then
+        MakeDraggable(floatButton, floatButton)
+    end
+
+    floatButton.MouseButton1Click:Connect(function()
+        window.Minimized = not window.Minimized
+        if window.Minimized then
+            tween(window.MainFrame, TweenInfo.new(0.5), { Size = UDim2.new(0, 500, 0, 40), BackgroundTransparency = 0.8 })
+            floatButton.Text = minimizeOptions.Text2
+            window.MainFrame.ClipsDescendants = true
+            window.TabContainer.Visible = false
+            RainLib:Notify(window, { Title = "Minimizado", Content = "Janela minimizada!", Duration = 2 })
+        else
+            tween(window.MainFrame, TweenInfo.new(0.5), { Size = UDim2.new(0, 500, 0, 350), BackgroundTransparency = 0 })
+            floatButton.Text = minimizeOptions.Text1
+            window.MainFrame.ClipsDescendants = false
+            window.TabContainer.Visible = true
+            RainLib:Notify(window, { Title = "Restaurado", Content = "Janela restaurada!", Duration = 2 })
+        end
+    end)
+
+    -- Ajustar texto inicial com base no estado da janela
+    if window.Minimized then
+        floatButton.Text = minimizeOptions.Text2
+    else
+        floatButton.Text = minimizeOptions.Text1
+    end
+
+    return floatButton
+end
+
+-- Função para criar janela
 function RainLib:Window(options)
     local window = { Tabs = {}, Notifications = Instance.new("Frame") }
     options = options or {}
@@ -194,7 +263,8 @@ function RainLib:Window(options)
         Theme = options.Theme or "Dark",
         MinimizeKey = options.MinimizeKey or Enum.KeyCode.LeftControl,
         SaveSettings = options.SaveSettings or false,
-        ConfigFolder = options.ConfigFolder or "RainConfig"
+        ConfigFolder = options.ConfigFolder or "RainConfig",
+        ElementSpacing = options.ElementSpacing or 10 -- Novo: espaçamento entre elementos
     }
 
     if window.Options.SaveSettings then
@@ -302,12 +372,12 @@ function RainLib:Window(options)
     window.TabIndicator.Position = UDim2.new(0, 0, 0, 5)
     window.TabIndicator.Parent = window.TabContainer
 
-    tween(window.MainFrame, { Position = window.Options.Position, BackgroundTransparency = 0 }, TweenInfo.new(0.5))
+    tween(window.MainFrame, TweenInfo.new(0.5), { Position = window.Options.Position, BackgroundTransparency = 0 })
 
     MakeDraggable(window.TitleBar, window.MainFrame)
 
     window.CloseButton.MouseButton1Click:Connect(function()
-        tween(window.MainFrame, { Position = UDim2.new(0.5, -250, 0.5, 300), BackgroundTransparency = 1 }, TweenInfo.new(0.5)).Completed:Connect(function()
+        tween(window.MainFrame, TweenInfo.new(0.5), { Position = UDim2.new(0.5, -250, 0.5, 300), BackgroundTransparency = 1 }).Completed:Connect(function()
             window.MainFrame:Destroy()
             window.Notifications:Destroy()
         end)
@@ -317,12 +387,12 @@ function RainLib:Window(options)
     window.MinimizeBtn.MouseButton1Click:Connect(function()
         window.Minimized = not window.Minimized
         if window.Minimized then
-            tween(window.MainFrame, { Size = UDim2.new(0, 500, 0, 40) })
+            tween(window.MainFrame, TweenInfo.new(0.5), { Size = UDim2.new(0, 500, 0, 40) })
             window.MinimizeBtn.Text = "+"
             window.MainFrame.ClipsDescendants = true
             window.TabContainer.Visible = false
         else
-            tween(window.MainFrame, { Size = UDim2.new(0, 500, 0, 350) })
+            tween(window.MainFrame, TweenInfo.new(0.5), { Size = UDim2.new(0, 500, 0, 350) })
             window.MinimizeBtn.Text = "-"
             window.MainFrame.ClipsDescendants = false
             window.TabContainer.Visible = true
@@ -369,14 +439,14 @@ function RainLib:Window(options)
 
     playerFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement then
-            tween(playerFrame, { Size = UDim2.new(1, -10, 0, 42) }, TweenInfo.new(0.2))
-            tween(playerName, { TextColor3 = RainLib.CurrentTheme.Accent }, TweenInfo.new(0.2))
+            tween(playerFrame, TweenInfo.new(0.2), { Size = UDim2.new(1, -10, 0, 42) })
+            tween(playerName, TweenInfo.new(0.2), { TextColor3 = RainLib.CurrentTheme.Accent })
         end
     end)
     playerFrame.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement then
-            tween(playerFrame, { Size = UDim2.new(1, -10, 0, 40) }, TweenInfo.new(0.2))
-            tween(playerName, { TextColor3 = RainLib.CurrentTheme.Text }, TweenInfo.new(0.2))
+            tween(playerFrame, TweenInfo.new(0.2), { Size = UDim2.new(1, -10, 0, 40) })
+            tween(playerName, TweenInfo.new(0.2), { TextColor3 = RainLib.CurrentTheme.Text })
         end
     end)
 
@@ -386,7 +456,8 @@ function RainLib:Window(options)
         local tab = { Elements = {} }
         options = options or {}
         tab.Name = options.Title or "Tab"
-        tab.Icon = options.Icon
+        tab.IconName = options.IconName -- Novo: suporta nome do ícone
+        tab.Icon = options.Icon or (tab.IconName and RainLib:GetIcon(tab.IconName)) -- Usa ícone direto ou busca por nome
         tab.ElementCount = 0
 
         tab.Content = Instance.new("ScrollingFrame")
@@ -441,20 +512,20 @@ function RainLib:Window(options)
         end
 
         table.insert(window.Tabs, tab)
-        table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs, { Name = tab.Name, Icon = tab.Icon, Elements = {} })
+        table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs, { Name = tab.Name, Icon = tab.Icon, IconName = tab.IconName, Elements = {} })
 
         local function selectTab(index)
             for i, t in pairs(window.Tabs) do
                 if i == index then
                     t.Content.Visible = true
-                    tween(t.Content, { BackgroundTransparency = 1, Position = UDim2.new(0, 125, 0, 45) }, TweenInfo.new(0.3))
-                    tween(window.TabIndicator, { Position = UDim2.new(0, 0, 0, (i-1) * 40 + 5) }, TweenInfo.new(0.3, Enum.EasingStyle.Quad))
-                    tween(t.Button, { BackgroundColor3 = RainLib.CurrentTheme.Accent }, TweenInfo.new(0.2))
+                    tween(t.Content, TweenInfo.new(0.3), { BackgroundTransparency = 1, Position = UDim2.new(0, 125, 0, 45) })
+                    tween(window.TabIndicator, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { Position = UDim2.new(0, 0, 0, (i-1) * 40 + 5) })
+                    tween(t.Button, TweenInfo.new(0.2), { BackgroundColor3 = RainLib.CurrentTheme.Accent })
                 else
-                    tween(t.Content, { Position = UDim2.new(0, 170, 0, 45) }, TweenInfo.new(0.3)).Completed:Connect(function()
+                    tween(t.Content, TweenInfo.new(0.3), { Position = UDim2.new(0, 170, 0, 45) }).Completed:Connect(function()
                         t.Content.Visible = false
                     end)
-                    tween(t.Button, { BackgroundColor3 = RainLib.CurrentTheme.Secondary }, TweenInfo.new(0.2))
+                    tween(t.Button, TweenInfo.new(0.2), { BackgroundColor3 = RainLib.CurrentTheme.Secondary })
                 end
             end
         end
@@ -464,12 +535,12 @@ function RainLib:Window(options)
         end)
         tab.Button.MouseEnter:Connect(function()
             if not tab.Content.Visible then
-                tween(tab.Button, { BackgroundColor3 = RainLib.CurrentTheme.Secondary:Lerp(RainLib.CurrentTheme.Accent, 0.3) }, TweenInfo.new(0.2))
+                tween(tab.Button, TweenInfo.new(0.2), { BackgroundColor3 = RainLib.CurrentTheme.Secondary:Lerp(RainLib.CurrentTheme.Accent, 0.3) })
             end
         end)
         tab.Button.MouseLeave:Connect(function()
             if not tab.Content.Visible then
-                tween(tab.Button, { BackgroundColor3 = RainLib.CurrentTheme.Secondary }, TweenInfo.new(0.2))
+                tween(tab.Button, TweenInfo.new(0.2), { BackgroundColor3 = RainLib.CurrentTheme.Secondary })
             end
         end)
 
@@ -478,7 +549,7 @@ function RainLib:Window(options)
         end
 
         local function getNextPosition(size)
-            local padding = 8
+            local padding = window.Options.ElementSpacing -- Usa o espaçamento configurável
             local yOffset = padding + tab.ElementCount * (size.Y.Offset + padding)
             tab.ElementCount = tab.ElementCount + 1
             tab.Content.CanvasSize = UDim2.new(0, 0, 0, yOffset + size.Y.Offset + padding)
@@ -589,10 +660,10 @@ function RainLib:Window(options)
             createContainer(button, buttonSize)
             button.MouseButton1Click:Connect(options.Callback or function() end)
             button.MouseEnter:Connect(function()
-                tween(button, { BackgroundColor3 = RainLib.CurrentTheme.Accent:Lerp(Color3.fromRGB(255, 255, 255), 0.2) }, TweenInfo.new(0.2))
+                tween(button, TweenInfo.new(0.2), { BackgroundColor3 = RainLib.CurrentTheme.Accent:Lerp(Color3.fromRGB(255, 255, 255), 0.2) })
             end)
             button.MouseLeave:Connect(function()
-                tween(button, { BackgroundColor3 = RainLib.CurrentTheme.Accent }, TweenInfo.new(0.2))
+                tween(button, TweenInfo.new(0.2), { BackgroundColor3 = RainLib.CurrentTheme.Accent })
             end)
 
             table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs[#RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs].Elements, {
@@ -647,11 +718,11 @@ function RainLib:Window(options)
             frame.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     toggle.Value = not toggle.Value
-                    tween(indicator, {
+                    tween(indicator, TweenInfo.new(0.2), {
                         BackgroundColor3 = toggle.Value and RainLib.CurrentTheme.Accent or RainLib.CurrentTheme.Disabled,
                         Size = UDim2.new(0, toggle.Value and 22 or 18, 0, toggle.Value and 22 or 18),
                         Position = UDim2.new(1, toggle.Value and -30 or -26, 0.5, toggle.Value and -11 or -9)
-                    }, TweenInfo.new(0.2))
+                    })
                     if options.Callback then
                         options.Callback(toggle.Value)
                     end
@@ -661,13 +732,6 @@ function RainLib:Window(options)
                         RainLib:SaveSettings(window.Options.ConfigFolder, settings)
                     end
                 end
-            end)
-
-            frame.MouseEnter:Connect(function()
-                tween(frame, { BackgroundColor3 = RainLib.CurrentTheme.Secondary:Lerp(RainLib.CurrentTheme.Accent, 0.1) }, TweenInfo.new(0.2))
-            end)
-            frame.MouseLeave:Connect(function()
-                tween(frame, { BackgroundColor3 = RainLib.CurrentTheme.Secondary }, TweenInfo.new(0.2))
             end)
 
             table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs[#RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs].Elements, {
@@ -740,20 +804,19 @@ function RainLib:Window(options)
 
             createContainer(frame, sliderSize)
             local dragging
+            local sliderConnection
             bar.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     dragging = true
-                    tween(bar, { BackgroundColor3 = RainLib.CurrentTheme.Disabled:Lerp(RainLib.CurrentTheme.Accent, 0.2) }, TweenInfo.new(0.2))
+                    tween(bar, TweenInfo.new(0.2), { BackgroundColor3 = RainLib.CurrentTheme.Disabled:Lerp(RainLib.CurrentTheme.Accent, 0.2) })
                 end
             end)
             bar.InputEnded:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     dragging = false
-                    tween(bar, { BackgroundColor3 = RainLib.CurrentTheme.Disabled }, TweenInfo.new(0.2))
+                    tween(bar, TweenInfo.new(0.2), { BackgroundColor3 = RainLib.CurrentTheme.Disabled })
                 end
             end)
-
-            local sliderConnection
             sliderConnection = RunService.RenderStepped:Connect(function()
                 if dragging then
                     local mousePos = UserInputService:GetMouseLocation()
@@ -762,7 +825,7 @@ function RainLib:Window(options)
                     if options.Rounding then
                         slider.Value = math.floor(slider.Value / options.Rounding) * options.Rounding
                     end
-                    tween(fill, { Size = UDim2.new(relativeX, 0, 1, 0) }, TweenInfo.new(0.1))
+                    tween(fill, TweenInfo.new(0.1), { Size = UDim2.new(relativeX, 0, 1, 0) })
                     valueLabel.Text = tostring(slider.Value)
                     if options.Callback then
                         options.Callback(slider.Value)
@@ -870,12 +933,6 @@ function RainLib:Window(options)
                             RainLib:SaveSettings(window.Options.ConfigFolder, settings)
                         end
                     end)
-                    itemButton.MouseEnter:Connect(function()
-                        tween(itemButton, { BackgroundColor3 = RainLib.CurrentTheme.Secondary:Lerp(RainLib.CurrentTheme.Accent, 0.2) }, TweenInfo.new(0.2))
-                    end)
-                    itemButton.MouseLeave:Connect(function()
-                        tween(itemButton, { BackgroundColor3 = RainLib.CurrentTheme.Secondary }, TweenInfo.new(0.2))
-                    end)
                 end
             end
             updateList()
@@ -883,7 +940,7 @@ function RainLib:Window(options)
             createContainer(frame, dropdownSize)
             button.MouseButton1Click:Connect(function()
                 listFrame.Visible = not listFrame.Visible
-                tween(listFrame, { Size = listFrame.Visible and UDim2.new(0, 90, 0, math.min(#options.Items * 25, 100)) or UDim2.new(0, 90, 0, 0) }, TweenInfo.new(0.2))
+                tween(listFrame, TweenInfo.new(0.2), { Size = listFrame.Visible and UDim2.new(0, 90, 0, math.min(#options.Items * 25, 100)) or UDim2.new(0, 90, 0, 0) })
             end)
 
             table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs[#RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs].Elements, {
@@ -1115,21 +1172,15 @@ function RainLib:Window(options)
                         btn.Callback()
                     end
                 end)
-                btnFrame.MouseEnter:Connect(function()
-                    tween(btnFrame, { BackgroundColor3 = RainLib.CurrentTheme.Accent:Lerp(Color3.fromRGB(255, 255, 255), 0.2) }, TweenInfo.new(0.2))
-                end)
-                btnFrame.MouseLeave:Connect(function()
-                    tween(btnFrame, { BackgroundColor3 = RainLib.CurrentTheme.Accent }, TweenInfo.new(0.2))
-                end)
             end
 
             function dialog:Show()
                 dialogFrame.Visible = true
-                tween(dialogFrame, { BackgroundTransparency = 0 }, TweenInfo.new(0.5))
+                tween(dialogFrame, TweenInfo.new(0.5), { BackgroundTransparency = 0 })
             end
 
             function dialog:Hide()
-                tween(dialogFrame, { BackgroundTransparency = 1 }, TweenInfo.new(0.5)).Completed:Connect(function()
+                tween(dialogFrame, TweenInfo.new(0.5), { BackgroundTransparency = 1 }).Completed:Connect(function()
                     dialogFrame.Visible = false
                 end)
             end
@@ -1147,7 +1198,7 @@ function RainLib:Window(options)
     return window
 end
 
--- Recreate the GUI from state
+-- Função para recriar GUI
 function RainLib:RecreateGUI()
     if RainLib.ScreenGui then
         RainLib.ScreenGui:Destroy()
@@ -1161,7 +1212,7 @@ function RainLib:RecreateGUI()
     for _, windowState in ipairs(RainLib.GUIState.Windows) do
         local window = RainLib:Window(windowState.Options)
         for _, tabState in ipairs(windowState.Tabs) do
-            local tab = window:Tab({ Title = tabState.Name, Icon = tabState.Icon })
+            local tab = window:Tab({ Title = tabState.Name, Icon = tabState.Icon, IconName = tabState.IconName })
             for _, elementState in ipairs(tabState.Elements) do
                 if elementState.Type == "Section" then
                     tab:AddSection(elementState.Options)
@@ -1187,7 +1238,7 @@ function RainLib:RecreateGUI()
     end
 end
 
--- Load configuration from saved settings
+-- Função para carregar configurações
 function RainLib:LoadConfig()
     for _, windowState in ipairs(RainLib.GUIState.Windows) do
         if windowState.Options.SaveSettings then
@@ -1205,18 +1256,18 @@ function RainLib:LoadConfig()
     end
 end
 
--- Destroy the library and clean up
+-- Função para destruir
 function RainLib:Destroy()
     for _, connection in ipairs(RainLib.Connections) do
         connection:Disconnect()
     end
     RainLib.Connections = {}
     if RainLib.ScreenGui then
-        tween(RainLib.ScreenGui, { BackgroundTransparency = 1 }, TweenInfo.new(0.5)).Completed:Connect(function()
+        tween(RainLib.ScreenGui, TweenInfo.new(0.5), { BackgroundTransparency = 1 }).Completed:Connect(function()
             RainLib.ScreenGui:Destroy()
         end)
     end
 end
 
-print("[RainLib] Library loaded!")
+print("[RainLib] Biblioteca carregada!")
 return RainLib
