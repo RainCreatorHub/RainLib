@@ -964,119 +964,7 @@ function RainLib:Window(options)
 
             return keybind
         end
-
-        function tab:AddColorpicker(key, options)
-            options = options or {}
-            local pickerSize = UDim2.new(1, -16, 0, 90)
-            local picker = { Value = options.Default or Color3.fromRGB(255, 255, 255) }
-            local frame = Instance.new("Frame")
-            frame.Size = pickerSize
-            frame.BackgroundColor3 = RainLib.CurrentTheme.Secondary
-
-            local corner = Instance.new("UICorner")
-            corner.CornerRadius = UDim.new(0, 6)
-            corner.Parent = frame
-
-            local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(1, -40, 0, 18)
-            label.Text = options.Title or "Colorpicker"
-            label.BackgroundTransparency = 1
-            label.TextColor3 = RainLib.CurrentTheme.Text
-            label.Font = Enum.Font.SourceSans
-            label.TextSize = 14
-            label.TextXAlignment = Enum.TextXAlignment.Left
-            label.TextWrapped = true
-            label.Parent = frame
-
-            local preview = Instance.new("Frame")
-            preview.Size = UDim2.new(0, 25, 0, 25)
-            preview.Position = UDim2.new(1, -33, 0, 4)
-            preview.BackgroundColor3 = picker.Value
-            preview.Parent = frame
-
-            local previewCorner = Instance.new("UICorner")
-            previewCorner.CornerRadius = UDim.new(0, 5)
-            previewCorner.Parent = preview
-
-            local rSlider = tab:AddSlider(key .. "_R", {
-                Title = "R",
-                Min = 0,
-                Max = 255,
-                Default = math.floor(picker.Value.R * 255),
-                Callback = function(value)
-                    picker.Value = Color3.fromRGB(value, picker.Value.G * 255, picker.Value.B * 255)
-                    preview.BackgroundColor3 = picker.Value
-                    if options.Callback then
-                        options.Callback(picker.Value)
-                    end
-                    if options.Flag and window.Options.SaveSettings then
-                        local settings = RainLib:LoadSettings(window.Options.ConfigFolder) or { Flags = {} }
-                        settings.Flags[options.Flag] = { picker.Value.R, picker.Value.G, picker.Value.B }
-                        RainLib:SaveSettings(window.Options.ConfigFolder, settings)
-                    end
-                end
-            })
-            rSlider.Parent.Position = UDim2.new(0, 8, 0, 34)
-
-            local gSlider = tab:AddSlider(key .. "_G", {
-                Title = "G",
-                Min = 0,
-                Max = 255,
-                Default = math.floor(picker.Value.G * 255),
-                Callback = function(value)
-                    picker.Value = Color3.fromRGB(picker.Value.R * 255, value, picker.Value.B * 255)
-                    preview.BackgroundColor3 = picker.Value
-                    if options.Callback then
-                        options.Callback(picker.Value)
-                    end
-                    if options.Flag and window.Options.SaveSettings then
-                        local settings = RainLib:LoadSettings(window.Options.ConfigFolder) or { Flags = {} }
-                        settings.Flags[options.Flag] = { picker.Value.R, picker.Value.G, picker.Value.B }
-                        RainLib:SaveSettings(window.Options.ConfigFolder, settings)
-                    end
-                end
-            })
-            gSlider.Parent.Position = UDim2.new(0, 8, 0, 64)
-
-            local bSlider = tab:AddSlider(key .. "_B", {
-                Title = "B",
-                Min = 0,
-                Max = 255,
-                Default = math.floor(picker.Value.B * 255),
-                Callback = function(value)
-                    picker.Value = Color3.fromRGB(picker.Value.R * 255, picker.Value.G * 255, value)
-                    preview.BackgroundColor3 = picker.Value
-                    if options.Callback then
-                        options.Callback(picker.Value)
-                    end
-                    if options.Flag and window.Options.SaveSettings then
-                        local settings = RainLib:LoadSettings(window.Options.ConfigFolder) or { Flags = {} }
-                        settings.Flags[options.Flag] = { picker.Value.R, picker.Value.G, picker.Value.B }
-                        RainLib:SaveSettings(window.Options.ConfigFolder, settings)
-                    end
-                end
-            })
-            bSlider.Parent.Position = UDim2.new(0, 8, 0, 94)
-
-            if options.Flag and window.Options.SaveSettings then
-                local settings = RainLib:LoadSettings(window.Options.ConfigFolder)
-                if settings and settings.Flags[options.Flag] then
-                    picker.Value = Color3.new(unpack(settings.Flags[options.Flag]))
-                    preview.BackgroundColor3 = picker.Value
-                    rSlider.Value = math.floor(picker.Value.R * 255)
-                    gSlider.Value = math.floor(picker.Value.G * 255)
-                    bSlider.Value = math.floor(picker.Value.B * 255)
-                end
-            end
-
-            createContainer(frame, pickerSize)
-            table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs[#RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs].Elements, {
-                Type = "Colorpicker", Key = key, Options = options
-            })
-
-            return picker
-        end
-
+        
         function tab:AddInput(key, options)
             options = options or {}
             local inputSize = UDim2.new(1, -16, 0, 35)
@@ -1279,8 +1167,6 @@ function RainLib:RecreateGUI()
                     tab:AddDropdown(elementState.Key, elementState.Options)
                 elseif elementState.Type == "Keybind" then
                     tab:AddKeybind(elementState.Key, elementState.Options)
-                elseif elementState.Type == "Colorpicker" then
-                    tab:AddColorpicker(elementState.Key, elementState.Options)
                 elseif elementState.Type == "Input" then
                     tab:AddInput(elementState.Key, elementState.Options)
                 elseif elementState.Type == "Dialog" then
