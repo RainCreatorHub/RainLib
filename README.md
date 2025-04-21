@@ -81,7 +81,7 @@ mainTab:AddButton({
 })
 ```
 
- checkBox
+ toggle
 
 ``` Lua
 mainTab:AddToggle("teste_toggle", {
