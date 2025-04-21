@@ -133,19 +133,6 @@ local dropdown = mainTab:AddDropdown("tema_dropdown", {
 })
 ```
 
- ColorPicker
-
-``` lua
-mainTab:AddColorpicker("teste_color", {
-    Title = "Cor",
-    Default = Color3.fromRGB(255, 0, 0),
-    Flag = "ColorTeste",
-    Callback = function(color)
-        print("Cor:", color)
-    end
-})
-```
-
  notificação 
 
 ``` Lua
