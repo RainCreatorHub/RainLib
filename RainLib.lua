@@ -366,10 +366,11 @@ function RainLib:Window(options)
     table.insert(RainLib.GUIState.Windows, { Options = window.Options, Tabs = {} })
 
     function window:Tab(options)
-        local tab = { Elements = {}, ElementCount = 0, ElementSpacing = 8 } -- Adiciona ElementSpacing com valor padrão
+        local tab = { Elements = {} }
         options = options or {}
         tab.Name = options.Title or "Tab"
         tab.Icon = options.Icon
+        tab.ElementCount = 0
 
         tab.Content = Instance.new("ScrollingFrame")
         tab.Content.Size = UDim2.new(1, -130, 1, -50)
@@ -460,41 +461,22 @@ function RainLib:Window(options)
         end
 
         local function getNextPosition(size)
-            local yOffset = tab.ElementSpacing + tab.ElementCount * (size.Y.Offset + tab.ElementSpacing)
+            local padding = 8
+            local yOffset = padding + tab.ElementCount * (size.Y.Offset + padding)
             tab.ElementCount = tab.ElementCount + 1
-            tab.Content.CanvasSize = UDim2.new(0, 0, 0, yOffset + size.Y.Offset + tab.ElementSpacing)
-            return UDim2.new(0, tab.ElementSpacing, 0, yOffset)
+            tab.Content.CanvasSize = UDim2.new(0, 0, 0, yOffset + size.Y.Offset + padding)
+            return UDim2.new(0, padding, 0, yOffset)
         end
 
         local function createContainer(element, size)
             local container = Instance.new("Frame")
-            container.Size = UDim2.new(1, -tab.ElementSpacing * 2, 0, size.Y.Offset + tab.ElementSpacing * 2)
+            container.Size = UDim2.new(1, -16, 0, size.Y.Offset + 16)
             container.Position = getNextPosition(size)
             container.BackgroundTransparency = 1
             container.Parent = tab.Container
             element.Parent = container
-            element.Position = UDim2.new(0, tab.ElementSpacing, 0, tab.ElementSpacing)
+            element.Position = UDim2.new(0, 8, 0, 8)
             return container
-        end
-
-        local function addElement(element)
-            table.insert(tab.Elements, element)
-        end
-
-        function tab:SetElementSpacing(spacing)
-            if type(spacing) == "number" and spacing >= 0 then
-                tab.ElementSpacing = spacing
-                local currentOffset = tab.ElementSpacing
-                for i, element in ipairs(tab.Elements) do
-                    local size = element.Size
-                    element.Parent.Position = UDim2.new(0, tab.ElementSpacing, 0, currentOffset)
-                    element.Parent.Size = UDim2.new(1, -tab.ElementSpacing * 2, 0, size.Y.Offset + tab.ElementSpacing * 2)
-                    currentOffset = currentOffset + size.Y.Offset + tab.ElementSpacing
-                end
-                tab.Content.CanvasSize = UDim2.new(0, 0, 0, currentOffset)
-            else
-                warn("[RainLib] Espaçamento inválido! Use um número não negativo.")
-            end
         end
 
         function tab:AddSection(options)
@@ -518,8 +500,7 @@ function RainLib:Window(options)
             label.TextSize = 14
             label.Parent = section
 
-            local container = createContainer(section, sectionSize)
-            addElement(section)
+            createContainer(section, sectionSize)
             table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs[#RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs].Elements, {
                 Type = "Section", Options = options
             })
@@ -559,8 +540,7 @@ function RainLib:Window(options)
             content.TextWrapped = true
             content.Parent = paragraph
 
-            local container = createContainer(paragraph, paragraphSize)
-            addElement(paragraph)
+            createContainer(paragraph, paragraphSize)
             table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs[#RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs].Elements, {
                 Type = "Paragraph", Options = options
             })
@@ -589,7 +569,7 @@ function RainLib:Window(options)
             stroke.Color = RainLib.CurrentTheme.Accent:Lerp(Color3.fromRGB(0, 0, 0), 0.2)
             stroke.Parent = button
 
-            local container = createContainer(button, buttonSize)
+            createContainer(button, buttonSize)
             button.MouseButton1Click:Connect(options.Callback or function() end)
             button.MouseEnter:Connect(function()
                 tween(button, TweenInfo.new(0.2), { BackgroundColor3 = RainLib.CurrentTheme.Accent:Lerp(Color3.fromRGB(255, 255, 255), 0.2) })
@@ -598,7 +578,6 @@ function RainLib:Window(options)
                 tween(button, TweenInfo.new(0.2), { BackgroundColor3 = RainLib.CurrentTheme.Accent })
             end)
 
-            addElement(button)
             table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs[#RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs].Elements, {
                 Type = "Button", Options = options
             })
@@ -647,7 +626,7 @@ function RainLib:Window(options)
                 end
             end
 
-            local container = createContainer(frame, toggleSize)
+            createContainer(frame, toggleSize)
             frame.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     toggle.Value = not toggle.Value
@@ -667,7 +646,6 @@ function RainLib:Window(options)
                 end
             end)
 
-            addElement(frame)
             table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs[#RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs].Elements, {
                 Type = "Toggle", Key = key, Options = options
             })
@@ -736,7 +714,7 @@ function RainLib:Window(options)
                 end
             end
 
-            local container = createContainer(frame, sliderSize)
+            createContainer(frame, sliderSize)
             local dragging
             bar.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -771,7 +749,6 @@ function RainLib:Window(options)
                 end
             end)
 
-            addElement(frame)
             table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs[#RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs].Elements, {
                 Type = "Slider", Key = key, Options = options
             })
@@ -870,13 +847,12 @@ function RainLib:Window(options)
             end
             updateList()
 
-            local container = createContainer(frame, dropdownSize)
+            createContainer(frame, dropdownSize)
             button.MouseButton1Click:Connect(function()
                 listFrame.Visible = not listFrame.Visible
                 tween(listFrame, TweenInfo.new(0.2), { Size = listFrame.Visible and UDim2.new(0, 90, 0, math.min(#options.Items * 25, 100)) or UDim2.new(0, 90, 0, 0) })
             end)
 
-            addElement(frame)
             table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs[#RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs].Elements, {
                 Type = "Dropdown", Key = key, Options = options
             })
@@ -930,7 +906,7 @@ function RainLib:Window(options)
                 end
             end
 
-            local container = createContainer(frame, keybindSize)
+            createContainer(frame, keybindSize)
             local binding
             button.MouseButton1Click:Connect(function()
                 button.Text = "..."
@@ -952,7 +928,6 @@ function RainLib:Window(options)
                 end
             end)
 
-            addElement(frame)
             table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs[#RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs].Elements, {
                 Type = "Keybind", Key = key, Options = options
             })
@@ -1011,7 +986,7 @@ function RainLib:Window(options)
                     end
                 end
             })
-            rSlider.Parent.Position = UDim2.new(0, tab.ElementSpacing, 0, 34)
+            rSlider.Parent.Position = UDim2.new(0, 8, 0, 34)
 
             local gSlider = tab:AddSlider(key .. "_G", {
                 Title = "G",
@@ -1031,7 +1006,7 @@ function RainLib:Window(options)
                     end
                 end
             })
-            gSlider.Parent.Position = UDim2.new(0, tab.ElementSpacing, 0, 64)
+            gSlider.Parent.Position = UDim2.new(0, 8, 0, 64)
 
             local bSlider = tab:AddSlider(key .. "_B", {
                 Title = "B",
@@ -1051,7 +1026,7 @@ function RainLib:Window(options)
                     end
                 end
             })
-            bSlider.Parent.Position = UDim2.new(0, tab.ElementSpacing, 0, 94)
+            bSlider.Parent.Position = UDim2.new(0, 8, 0, 94)
 
             if options.Flag and window.Options.SaveSettings then
                 local settings = RainLib:LoadSettings(window.Options.ConfigFolder)
@@ -1064,8 +1039,7 @@ function RainLib:Window(options)
                 end
             end
 
-            local container = createContainer(frame, pickerSize)
-            addElement(frame)
+            createContainer(frame, pickerSize)
             table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs[#RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs].Elements, {
                 Type = "Colorpicker", Key = key, Options = options
             })
@@ -1119,7 +1093,7 @@ function RainLib:Window(options)
                 end
             end
 
-            local container = createContainer(frame, inputSize)
+            createContainer(frame, inputSize)
             textBox.FocusLost:Connect(function()
                 input.Value = textBox.Text
                 if options.Callback then
@@ -1132,7 +1106,6 @@ function RainLib:Window(options)
                 end
             end)
 
-            addElement(frame)
             table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs[#RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs].Elements, {
                 Type = "Input", Key = key, Options = options
             })
@@ -1233,8 +1206,6 @@ function RainLib:Window(options)
                 end)
             end
 
-            local container = createContainer(dialogFrame, UDim2.new(1, -16, 0, 130))
-            addElement(dialogFrame)
             table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs[#RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs].Elements, {
                 Type = "Dialog", Options = options
             })
