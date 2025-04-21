@@ -1,5 +1,3 @@
--- RainLib: Biblioteca UI para Roblox com espaçamento automático e funcionalidades avançadas
--- Versão: 1.1.4 (atualizada para incluir espaçamento automático e novos elementos)
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -7,32 +5,22 @@ local LocalPlayer = game:GetService("Players").LocalPlayer
 local HttpService = game:GetService("HttpService")
 
 local RainLib = {
-    Version = "1.1.4", -- Versão atualizada
+    Version = "1.1.3",
     Themes = {
         Dark = {
             Background = Color3.fromRGB(25, 25, 25),
             Accent = Color3.fromRGB(60, 160, 255),
             Text = Color3.fromRGB(240, 240, 240),
             Secondary = Color3.fromRGB(45, 45, 45),
-            Disabled = Color3.fromRGB(90, 90, 90),
-            Notification = Color3.fromRGB(35, 35, 35)
-        },
-        Light = { -- Novo tema para demonstração
-            Background = Color3.fromRGB(240, 240, 240),
-            Accent = Color3.fromRGB(0, 120, 255),
-            Text = Color3.fromRGB(20, 20, 20),
-            Secondary = Color3.fromRGB(200, 200, 200),
-            Disabled = Color3.fromRGB(150, 150, 150),
-            Notification = Color3.fromRGB(220, 220, 220)
+            Disabled = Color3.fromRGB(90, 90, 90)
         }
     },
     CurrentTheme = nil,
     CreatedFolders = {},
-    GUIState = { Windows = {}, Notifications = {} }
+    GUIState = { Windows = {} }
 }
 
 -- Função auxiliar para animações
--- Cria uma animação com TweenService, permitindo personalização de duração e estilo
 local function tween(obj, info, properties)
     local t = TweenService:Create(obj, info or TweenInfo.new(0.3, Enum.EasingStyle.Quint), properties)
     t:Play()
@@ -40,7 +28,6 @@ local function tween(obj, info, properties)
 end
 
 -- Função para arrastar janela
--- Permite arrastar a janela clicando e movendo o mouse ou toque
 local function MakeDraggable(DragPoint, Main)
     local Dragging, DragInput, MousePos, FramePos
     DragPoint.InputBegan:Connect(function(input)
@@ -70,48 +57,7 @@ local function MakeDraggable(DragPoint, Main)
     end)
 end
 
--- Função para redimensionar janela (nova funcionalidade)
--- Permite redimensionar a janela arrastando a borda inferior direita
-local function MakeResizable(MainFrame)
-    local ResizeHandle = Instance.new("Frame")
-    ResizeHandle.Size = UDim2.new(0, 15, 0, 15)
-    ResizeHandle.Position = UDim2.new(1, -15, 1, -15)
-    ResizeHandle.BackgroundColor3 = RainLib.CurrentTheme.Accent
-    ResizeHandle.Parent = MainFrame
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 4)
-    corner.Parent = ResizeHandle
-
-    local Dragging, DragInput, StartSize, StartPos
-    ResizeHandle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            Dragging = true
-            StartPos = input.Position
-            StartSize = MainFrame.Size
-        end
-    end)
-    ResizeHandle.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            DragInput = input
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if input == DragInput and Dragging then
-            local Delta = input.Position - StartPos
-            local NewWidth = math.max(300, StartSize.X.Offset + Delta.X)
-            local NewHeight = math.max(200, StartSize.Y.Offset + Delta.Y)
-            MainFrame.Size = UDim2.new(0, NewWidth, 0, NewHeight)
-        end
-    end)
-    ResizeHandle.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            Dragging = false
-        end
-    end)
-end
-
--- Inicialização da biblioteca
+-- Inicialização
 print("[RainLib] Inicializando...")
 local success, err = pcall(function()
     RainLib.ScreenGui = Instance.new("ScreenGui")
@@ -127,8 +73,7 @@ if not success then
 end
 print("[RainLib] Inicializado com sucesso!")
 
--- Função para criar pastas de configuração
--- Cria uma pasta para salvar configurações, se suportado pelo ambiente
+-- Função para criar pastas
 function RainLib:CreateFolder(folderName)
     if not folderName or folderName == "" then
         warn("[RainLib] Nome da pasta não especificado!")
@@ -147,8 +92,7 @@ function RainLib:CreateFolder(folderName)
     return false
 end
 
--- Funções para salvar e carregar configurações
--- Salvam e recuperam configurações em formato JSON
+-- Funções para salvar/carregar configurações
 function RainLib:SaveSettings(folderName, settings)
     if isfolder(folderName) and writefile then
         writefile(folderName .. "/Settings.json", HttpService:JSONEncode(settings))
@@ -165,26 +109,13 @@ function RainLib:LoadSettings(folderName)
     return nil
 end
 
--- Função para aplicar tema personalizado
--- Permite mudar o tema da interface dinamicamente
-function RainLib:SetTheme(themeName)
-    if self.Themes[themeName] then
-        self.CurrentTheme = self.Themes[themeName]
-        self:RecreateGUI() -- Recria a GUI para aplicar o novo tema
-        self:Notify(nil, { Title = "Tema Alterado", Content = "Tema '" .. themeName .. "' aplicado!", Duration = 3 })
-    else
-        warn("[RainLib] Tema '" .. themeName .. "' não encontrado!")
-    end
-end
-
 -- Função para notificações
--- Exibe notificações flutuantes com animações
 function RainLib:Notify(window, options)
     local target = window and window.Notifications or RainLib.ScreenGui
     local notification = Instance.new("Frame")
     notification.Size = UDim2.new(0, 250, 0, 70)
     notification.Position = UDim2.new(1, 260, 0, (#target:GetChildren() - 1) * 80 + 10)
-    notification.BackgroundColor3 = RainLib.CurrentTheme.Notification or RainLib.CurrentTheme.Background
+    notification.BackgroundColor3 = RainLib.CurrentTheme.Background
     notification.Parent = target
 
     local corner = Instance.new("UICorner")
@@ -233,7 +164,6 @@ function RainLib:Notify(window, options)
 end
 
 -- Função para criar janela
--- Cria uma janela com abas, notificações e controles
 function RainLib:Window(options)
     local window = { Tabs = {}, Notifications = Instance.new("Frame") }
     options = options or {}
@@ -356,13 +286,11 @@ function RainLib:Window(options)
     tween(window.MainFrame, TweenInfo.new(0.5), { Position = window.Options.Position, BackgroundTransparency = 0 })
 
     MakeDraggable(window.TitleBar, window.MainFrame)
-    MakeResizable(window.MainFrame) -- Nova funcionalidade de redimensionamento
 
     window.CloseButton.MouseButton1Click:Connect(function()
         tween(window.MainFrame, TweenInfo.new(0.5), { Position = UDim2.new(0.5, -250, 0.5, 300), BackgroundTransparency = 1 }).Completed:Connect(function()
             window.MainFrame:Destroy()
             window.Notifications:Destroy()
-            RainLib:Notify(nil, { Title = "Janela Fechada", Content = window.Options.Title .. " foi fechada.", Duration = 3 })
         end)
     end)
 
@@ -374,21 +302,12 @@ function RainLib:Window(options)
             window.MinimizeBtn.Text = "+"
             window.MainFrame.ClipsDescendants = true
             window.TabContainer.Visible = false
-            for _, tab in ipairs(window.Tabs) do
-                tab.Content.Visible = false
-            end
         else
             tween(window.MainFrame, TweenInfo.new(0.5), { Size = UDim2.new(0, 500, 0, 350) })
             window.MinimizeBtn.Text = "-"
             window.MainFrame.ClipsDescendants = false
             window.TabContainer.Visible = true
-            for i, tab in ipairs(window.Tabs) do
-                if i == 1 then
-                    tab.Content.Visible = true
-                end
-            end
         end
-        RainLib:Notify(window, { Title = "Janela", Content = window.Minimized and "Janela minimizada" or "Janela restaurada", Duration = 2 })
     end)
 
     UserInputService.InputBegan:Connect(function(input)
@@ -447,10 +366,11 @@ function RainLib:Window(options)
     table.insert(RainLib.GUIState.Windows, { Options = window.Options, Tabs = {} })
 
     function window:Tab(options)
-        local tab = { Elements = {}, Containers = {}, ElementCount = 0 }
+        local tab = { Elements = {} }
         options = options or {}
         tab.Name = options.Title or "Tab"
         tab.Icon = options.Icon
+        tab.ElementCount = 0
 
         tab.Content = Instance.new("ScrollingFrame")
         tab.Content.Size = UDim2.new(1, -130, 1, -50)
@@ -524,7 +444,6 @@ function RainLib:Window(options)
 
         tab.Button.MouseButton1Click:Connect(function()
             selectTab(table.find(window.Tabs, tab))
-            RainLib:Notify(window, { Title = "Aba Selecionada", Content = tab.Name .. " foi selecionada.", Duration = 2 })
         end)
         tab.Button.MouseEnter:Connect(function()
             if not tab.Content.Visible then
@@ -541,39 +460,22 @@ function RainLib:Window(options)
             selectTab(1)
         end
 
-        -- Função para atualizar posições com espaçamento automático
-        local function updatePositions()
-            local totalHeight = 0
-            for _, element in ipairs(tab.Elements) do
-                totalHeight = totalHeight + element.Size.Y.Offset + 16 -- Margem do container
-            end
-
-            local contentHeight = tab.Content.AbsoluteSize.Y
-            local spacing = 0
-            if tab.ElementCount > 1 then
-                spacing = math.max(0, (contentHeight - totalHeight) / (tab.ElementCount - 1))
-            end
-
-            local yOffset = 0
-            for i, container in ipairs(tab.Containers) do
-                container.Position = UDim2.new(0, 8, 0, yOffset)
-                yOffset = yOffset + container.Size.Y.Offset + spacing
-            end
-
-            tab.Content.CanvasSize = UDim2.new(0, 0, 0, yOffset)
+        local function getNextPosition(size)
+            local padding = 8
+            local yOffset = padding + tab.ElementCount * (size.Y.Offset + padding)
+            tab.ElementCount = tab.ElementCount + 1
+            tab.Content.CanvasSize = UDim2.new(0, 0, 0, yOffset + size.Y.Offset + padding)
+            return UDim2.new(0, padding, 0, yOffset)
         end
 
         local function createContainer(element, size)
             local container = Instance.new("Frame")
             container.Size = UDim2.new(1, -16, 0, size.Y.Offset + 16)
+            container.Position = getNextPosition(size)
             container.BackgroundTransparency = 1
             container.Parent = tab.Container
             element.Parent = container
             element.Position = UDim2.new(0, 8, 0, 8)
-            table.insert(tab.Elements, element)
-            table.insert(tab.Containers, container)
-            tab.ElementCount = tab.ElementCount + 1
-            updatePositions()
             return container
         end
 
@@ -668,12 +570,7 @@ function RainLib:Window(options)
             stroke.Parent = button
 
             createContainer(button, buttonSize)
-            button.MouseButton1Click:Connect(function()
-                if options.Callback then
-                    options.Callback()
-                end
-                RainLib:Notify(window, { Title = "Botão Clicado", Content = options.Title or "Botão", Duration = 2 })
-            end)
+            button.MouseButton1Click:Connect(options.Callback or function() end)
             button.MouseEnter:Connect(function()
                 tween(button, TweenInfo.new(0.2), { BackgroundColor3 = RainLib.CurrentTheme.Accent:Lerp(Color3.fromRGB(255, 255, 255), 0.2) })
             end)
@@ -688,100 +585,102 @@ function RainLib:Window(options)
             return button
         end
 
-        function tab:AddToggle(key, options)
-            options = options or {}
-            local toggleSize = UDim2.new(1, -16, 0, 35)
-            local toggle = { Value = options.Default or false }
-            local frame = Instance.new("Frame")
-            frame.Size = toggleSize
-            frame.BackgroundColor3 = RainLib.CurrentTheme.Secondary
+  function tab:AddToggle(key, options)
+    options = options or {}
+    local toggleSize = UDim2.new(1, -16, 0, 35)
+    local toggle = { Value = options.Default or false }
+    local frame = Instance.new("Frame")
+    frame.Size = toggleSize
+    frame.BackgroundColor3 = RainLib.CurrentTheme.Secondary
 
-            local corner = Instance.new("UICorner")
-            corner.CornerRadius = UDim.new(0, 6)
-            corner.Parent = frame
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = frame
 
-            local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(1, -60, 1, 0)
-            label.Text = options.Title or "Toggle"
-            label.BackgroundTransparency = 1
-            label.TextColor3 = RainLib.CurrentTheme.Text
-            label.Font = Enum.Font.SourceSans
-            label.TextSize = 14
-            label.TextXAlignment = Enum.TextXAlignment.Left
-            label.TextWrapped = true
-            label.Parent = frame
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -60, 1, 0)
+    label.Text = options.Title or "Toggle"
+    label.BackgroundTransparency = 1
+    label.TextColor3 = RainLib.CurrentTheme.Text
+    label.Font = Enum.Font.SourceSans
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextWrapped = true
+    label.Parent = frame
 
-            local switchContainer = Instance.new("Frame")
-            switchContainer.Size = UDim2.new(0, 40, 0, 20)
-            switchContainer.Position = UDim2.new(1, -48, 0.5, -10)
+    -- Switch container
+    local switchContainer = Instance.new("Frame")
+    switchContainer.Size = UDim2.new(0, 40, 0, 20)
+    switchContainer.Position = UDim2.new(1, -48, 0.5, -10)
+    switchContainer.BackgroundColor3 = toggle.Value and RainLib.CurrentTheme.Accent or RainLib.CurrentTheme.Disabled
+    switchContainer.Parent = frame
+
+    local switchCorner = Instance.new("UICorner")
+    switchCorner.CornerRadius = UDim.new(0, 10)
+    switchCorner.Parent = switchContainer
+
+    -- Switch knob (o círculo que desliza)
+    local switchKnob = Instance.new("Frame")
+    switchKnob.Size = UDim2.new(0, 16, 0, 16)
+    switchKnob.Position = toggle.Value and UDim2.new(1, -20, 0, 2) or UDim2.new(0, 4, 0, 2)
+    switchKnob.BackgroundColor3 = RainLib.CurrentTheme.Text
+    switchKnob.Parent = switchContainer
+
+    local knobCorner = Instance.new("UICorner")
+    knobCorner.CornerRadius = UDim.new(0, 8)
+    knobCorner.Parent = switchKnob
+
+    if options.Flag and window.Options.SaveSettings then
+        local settings = RainLib:LoadSettings(window.Options.ConfigFolder)
+        if settings and settings.Flags[options.Flag] ~= nil then
+            toggle.Value = settings.Flags[options.Flag]
             switchContainer.BackgroundColor3 = toggle.Value and RainLib.CurrentTheme.Accent or RainLib.CurrentTheme.Disabled
-            switchContainer.Parent = frame
-
-            local switchCorner = Instance.new("UICorner")
-            switchCorner.CornerRadius = UDim.new(0, 10)
-            switchCorner.Parent = switchContainer
-
-            local switchKnob = Instance.new("Frame")
-            switchKnob.Size = UDim2.new(0, 16, 0, 16)
             switchKnob.Position = toggle.Value and UDim2.new(1, -20, 0, 2) or UDim2.new(0, 4, 0, 2)
-            switchKnob.BackgroundColor3 = RainLib.CurrentTheme.Text
-            switchKnob.Parent = switchContainer
+        end
+    end
 
-            local knobCorner = Instance.new("UICorner")
-            knobCorner.CornerRadius = UDim.new(0, 8)
-            knobCorner.Parent = switchKnob
-
-            if options.Flag and window.Options.SaveSettings then
-                local settings = RainLib:LoadSettings(window.Options.ConfigFolder)
-                if settings and settings.Flags[options.Flag] ~= nil then
-                    toggle.Value = settings.Flags[options.Flag]
-                    switchContainer.BackgroundColor3 = toggle.Value and RainLib.CurrentTheme.Accent or RainLib.CurrentTheme.Disabled
-                    switchKnob.Position = toggle.Value and UDim2.new(1, -20, 0, 2) or UDim2.new(0, 4, 0, 2)
-                end
-            end
-
-            createContainer(frame, toggleSize)
-            frame.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    toggle.Value = not toggle.Value
-                    tween(switchContainer, TweenInfo.new(0.2), {
-                        BackgroundColor3 = toggle.Value and RainLib.CurrentTheme.Accent or RainLib.CurrentTheme.Disabled
-                    })
-                    tween(switchKnob, TweenInfo.new(0.2), {
-                        Position = toggle.Value and UDim2.new(1, -20, 0, 2) or UDim2.new(0, 4, 0, 2)
-                    })
-                    if options.Callback then
-                        options.Callback(toggle.Value)
-                    end
-                    if options.Flag and window.Options.SaveSettings then
-                        local settings = RainLib:LoadSettings(window.Options.ConfigFolder) or { Flags = {} }
-                        settings.Flags[options.Flag] = toggle.Value
-                        RainLib:SaveSettings(window.Options.ConfigFolder, settings)
-                    end
-                    RainLib:Notify(window, { Title = "Toggle Alterado", Content = options.Title .. ": " .. tostring(toggle.Value), Duration = 2 })
-                end
-            end)
-
-            frame.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseMovement then
-                    tween(switchContainer, TweenInfo.new(0.2), {
-                        BackgroundColor3 = toggle.Value and RainLib.CurrentTheme.Accent:Lerp(Color3.fromRGB(255, 255, 255), 0.1) or RainLib.CurrentTheme.Disabled:Lerp(Color3.fromRGB(255, 255, 255), 0.1)
-                    })
-                end
-            end)
-            frame.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseMovement then
-                    tween(switchContainer, TweenInfo.new(0.2), {
-                        BackgroundColor3 = toggle.Value and RainLib.CurrentTheme.Accent or RainLib.CurrentTheme.Disabled
-                    })
-                end
-            end)
-
-            table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs[#RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs].Elements, {
-                Type = "Toggle", Key = key, Options = options
+    createContainer(frame, toggleSize)
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            toggle.Value = not toggle.Value
+            tween(switchContainer, TweenInfo.new(0.2), {
+                BackgroundColor3 = toggle.Value and RainLib.CurrentTheme.Accent or RainLib.CurrentTheme.Disabled
             })
+            tween(switchKnob, TweenInfo.new(0.2), {
+                Position = toggle.Value and UDim2.new(1, -20, 0, 2) or UDim2.new(0, 4, 0, 2)
+            })
+            if options.Callback then
+                options.Callback(toggle.Value)
+            end
+            if options.Flag and window.Options.SaveSettings then
+                local settings = RainLib:LoadSettings(window.Options.ConfigFolder) or { Flags = {} }
+                settings.Flags[options.Flag] = toggle.Value
+                RainLib:SaveSettings(window.Options.ConfigFolder, settings)
+            end
+        end
+    end)
 
-            return toggle
+    -- Animação de hover
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            tween(switchContainer, TweenInfo.new(0.2), {
+                BackgroundColor3 = toggle.Value and RainLib.CurrentTheme.Accent:Lerp(Color3.fromRGB(255, 255, 255), 0.1) or RainLib.CurrentTheme.Disabled:Lerp(Color3.fromRGB(255, 255, 255), 0.1)
+            })
+        end
+    end)
+    frame.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            tween(switchContainer, TweenInfo.new(0.2), {
+                BackgroundColor3 = toggle.Value and RainLib.CurrentTheme.Accent or RainLib.CurrentTheme.Disabled
+            })
+        end
+    end)
+
+    table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs[#RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs].Elements, {
+        Type = "Toggle", Key = key, Options = options
+    })
+
+    return toggle
         end
 
         function tab:AddSlider(key, options)
@@ -815,7 +714,7 @@ function RainLib:Window(options)
             valueLabel.TextColor3 = RainLib.CurrentTheme.Text
             valueLabel.Font = Enum.Font.SourceSans
             valueLabel.TextSize = 12
-            label.Parent = frame
+            valueLabel.Parent = frame
 
             local bar = Instance.new("Frame")
             bar.Size = UDim2.new(1, -8, 0, 6)
@@ -877,7 +776,6 @@ function RainLib:Window(options)
                         settings.Flags[options.Flag] = slider.Value
                         RainLib:SaveSettings(window.Options.ConfigFolder, settings)
                     end
-                    RainLib:Notify(window, { Title = "Slider Alterado", Content = options.Title .. ": " .. slider.Value, Duration = 2 })
                 end
             end)
 
@@ -974,7 +872,6 @@ function RainLib:Window(options)
                             settings.Flags[options.Flag] = dropdown.Value
                             RainLib:SaveSettings(window.Options.ConfigFolder, settings)
                         end
-                        RainLib:Notify(window, { Title = "Dropdown Alterado", Content = options.Title .. ": " .. tostring(item), Duration = 2 })
                     end)
                 end
             end
@@ -1058,7 +955,6 @@ function RainLib:Window(options)
                         settings.Flags[options.Flag] = keybind.Value.Name
                         RainLib:SaveSettings(window.Options.ConfigFolder, settings)
                     end
-                    RainLib:Notify(window, { Title = "Keybind Alterado", Content = options.Title .. ": " .. keybind.Value.Name, Duration = 2 })
                 end
             end)
 
@@ -1068,7 +964,7 @@ function RainLib:Window(options)
 
             return keybind
         end
-
+        
         function tab:AddInput(key, options)
             options = options or {}
             local inputSize = UDim2.new(1, -16, 0, 35)
@@ -1126,7 +1022,6 @@ function RainLib:Window(options)
                     settings.Flags[options.Flag] = input.Value
                     RainLib:SaveSettings(window.Options.ConfigFolder, settings)
                 end
-                RainLib:Notify(window, { Title = "Input Alterado", Content = options.Title .. ": " .. input.Value, Duration = 2 })
             end)
 
             table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs[#RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs].Elements, {
@@ -1215,7 +1110,6 @@ function RainLib:Window(options)
                     if btn.Callback then
                         btn.Callback()
                     end
-                    RainLib:Notify(window, { Title = "Diálogo", Content = "Botão " .. btn.Text .. " clicado.", Duration = 2 })
                 end)
             end
 
@@ -1237,155 +1131,6 @@ function RainLib:Window(options)
             return dialog
         end
 
-        function tab:AddColorPicker(key, options)
-            options = options or {}
-            local colorPickerSize = UDim2.new(1, -16, 0, 50)
-            local colorPicker = { Value = options.Default or Color3.fromRGB(255, 255, 255) }
-            local frame = Instance.new("Frame")
-            frame.Size = colorPickerSize
-            frame.BackgroundColor3 = RainLib.CurrentTheme.Secondary
-
-            local corner = Instance.new("UICorner")
-            corner.CornerRadius = UDim.new(0, 6)
-            corner.Parent = frame
-
-            local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(1, -60, 0, 18)
-            label.Text = options.Title or "Color Picker"
-            label.BackgroundTransparency = 1
-            label.TextColor3 = RainLib.CurrentTheme.Text
-            label.Font = Enum.Font.SourceSans
-            label.TextSize = 14
-            label.TextXAlignment = Enum.TextXAlignment.Left
-            label.TextWrapped = true
-            label.Parent = frame
-
-            local colorButton = Instance.new("Frame")
-            colorButton.Size = UDim2.new(0, 40, 0, 20)
-            colorButton.Position = UDim2.new(1, -48, 0, 5)
-            colorButton.BackgroundColor3 = colorPicker.Value
-            colorButton.Parent = frame
-
-            local colorCorner = Instance.new("UICorner")
-            colorCorner.CornerRadius = UDim.new(0, 5)
-            colorCorner.Parent = colorButton
-
-            local pickerFrame = Instance.new("Frame")
-            pickerFrame.Size = UDim2.new(0, 150, 0, 100)
-            pickerFrame.Position = UDim2.new(1, -158, 0, 30)
-            pickerFrame.BackgroundColor3 = RainLib.CurrentTheme.Secondary
-            pickerFrame.Visible = false
-            pickerFrame.Parent = frame
-
-            local pickerCorner = Instance.new("UICorner")
-            pickerCorner.CornerRadius = UDim.new(0, 6)
-            pickerCorner.Parent = pickerFrame
-
-            local hueBar = Instance.new("Frame")
-            hueBar.Size = UDim2.new(0, 20, 1, -10)
-            hueBar.Position = UDim2.new(0, 5, 0, 5)
-            hueBar.Parent = pickerFrame
-
-            local hueGradient = Instance.new("UIGradient")
-            hueGradient.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
-                ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
-                ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 0)),
-                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
-                ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 0, 255)),
-                ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 255)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
-            })
-            hueGradient.Parent = hueBar
-
-            local saturationFrame = Instance.new("Frame")
-            saturationFrame.Size = UDim2.new(0, 100, 1, -10)
-            saturationFrame.Position = UDim2.new(0, 30, 0, 5)
-            saturationFrame.BackgroundColor3 = colorPicker.Value
-            saturationFrame.Parent = pickerFrame
-
-            local saturationGradient = Instance.new("UIGradient")
-            saturationGradient.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-                ColorSequenceKeypoint.new(1, colorPicker.Value)
-            })
-            saturationGradient.Parent = saturationFrame
-
-            if options.Flag and window.Options.SaveSettings then
-                local settings = RainLib:LoadSettings(window.Options.ConfigFolder)
-                if settings and settings.Flags[options.Flag] ~= nil then
-                    colorPicker.Value = Color3.fromRGB(unpack(settings.Flags[options.Flag]))
-                    colorButton.BackgroundColor3 = colorPicker.Value
-                end
-            end
-
-            createContainer(frame, colorPickerSize)
-            colorButton.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    pickerFrame.Visible = not pickerFrame.Visible
-                end
-            end)
-
-            local draggingHue, draggingSaturation
-            hueBar.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    draggingHue = true
-                end
-            end)
-            saturationFrame.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    draggingSaturation = true
-                end
-            end)
-            hueBar.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    draggingHue = false
-                end
-            end)
-            saturationFrame.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    draggingSaturation = false
-                end
-            end)
-
-            RunService.RenderStepped:Connect(function()
-                if draggingHue or draggingSaturation then
-                    local mousePos = UserInputService:GetMouseLocation()
-                    if draggingHue then
-                        local relativeY = math.clamp((mousePos.Y - hueBar.AbsolutePosition.Y) / hueBar.AbsoluteSize.Y, 0, 1)
-                        local hue = 1 - relativeY
-                        local h, s, v = colorPicker.Value:ToHSV()
-                        colorPicker.Value = Color3.fromHSV(hue, s, v)
-                        saturationGradient.Color = ColorSequence.new({
-                            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-                            ColorSequenceKeypoint.new(1, colorPicker.Value)
-                        })
-                    end
-                    if draggingSaturation then
-                        local relativeX = math.clamp((mousePos.X - saturationFrame.AbsolutePosition.X) / saturationFrame.AbsoluteSize.X, 0, 1)
-                        local relativeY = math.clamp((mousePos.Y - saturationFrame.AbsolutePosition.Y) / saturationFrame.AbsoluteSize.Y, 0, 1)
-                        local h, _, v = colorPicker.Value:ToHSV()
-                        colorPicker.Value = Color3.fromHSV(h, relativeX, 1 - relativeY)
-                    end
-                    colorButton.BackgroundColor3 = colorPicker.Value
-                    if options.Callback then
-                        options.Callback(colorPicker.Value)
-                    end
-                    if options.Flag and window.Options.SaveSettings then
-                        local settings = RainLib:LoadSettings(window.Options.ConfigFolder) or { Flags = {} }
-                        settings.Flags[options.Flag] = { colorPicker.Value.R * 255, colorPicker.Value.G * 255, colorPicker.Value.B * 255 }
-                        RainLib:SaveSettings(window.Options.ConfigFolder, settings)
-                    end
-                end
-            end)
-
-            table.insert(RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs[#RainLib.GUIState.Windows[#RainLib.GUIState.Windows].Tabs].Elements, {
-                Type = "ColorPicker", Key = key, Options = options
-            })
-
-            return colorPicker
-        end
-
         return tab
     end
 
@@ -1393,7 +1138,6 @@ function RainLib:Window(options)
 end
 
 -- Função para recriar GUI
--- Recria todas as janelas e abas com base no estado salvo
 function RainLib:RecreateGUI()
     if RainLib.ScreenGui then
         RainLib.ScreenGui:Destroy()
@@ -1427,8 +1171,6 @@ function RainLib:RecreateGUI()
                     tab:AddInput(elementState.Key, elementState.Options)
                 elseif elementState.Type == "Dialog" then
                     tab:AddDialog(elementState.Options)
-                elseif elementState.Type == "ColorPicker" then
-                    tab:AddColorPicker(elementState.Key, elementState.Options)
                 end
             end
         end
@@ -1436,7 +1178,6 @@ function RainLib:RecreateGUI()
 end
 
 -- Função para carregar configurações
--- Aplica configurações salvas aos elementos
 function RainLib:LoadConfig()
     for _, windowState in ipairs(RainLib.GUIState.Windows) do
         if windowState.Options.SaveSettings then
@@ -1455,27 +1196,13 @@ function RainLib:LoadConfig()
 end
 
 -- Função para destruir
--- Remove a GUI com animação
 function RainLib:Destroy()
     if RainLib.ScreenGui then
         tween(RainLib.ScreenGui, TweenInfo.new(0.5), { BackgroundTransparency = 1 }).Completed:Connect(function()
             RainLib.ScreenGui:Destroy()
-            RainLib.GUIState = { Windows = {}, Notifications = {} }
-            RainLib:Notify(nil, { Title = "Interface Destruída", Content = "A interface foi removida.", Duration = 3 })
         end)
     end
 end
-
--- Evento global para toggle da GUI
--- Alterna a visibilidade da GUI com RightShift
-UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.RightShift then
-        if RainLib.ScreenGui then
-            RainLib.ScreenGui.Enabled = not RainLib.ScreenGui.Enabled
-            RainLib:Notify(nil, { Title = "Interface", Content = RainLib.ScreenGui.Enabled and "Interface exibida" or "Interface oculta", Duration = 2 })
-        end
-    end
-end)
 
 print("[RainLib] Biblioteca carregada!")
 return RainLib
