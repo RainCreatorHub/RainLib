@@ -158,12 +158,6 @@ local window = RainLib:Window({
     ConfigFolder = "MeuScriptConfig"
 })
 
-local window:Minimize({
-    Text1 = "Close",
-    Text2 = "Open",
-    Draggable = true
-})
-
 -- Cria uma aba
 local mainTab = window:Tab({
     Name = "Main",
@@ -176,15 +170,6 @@ mainTab:AddButton({
     Title = "Testar Botão",
     Callback = function()
         print("Botão clicado!")
-    end
-})
-
-mainTab:AddColorpicker("teste_color", {
-    Title = "Cor",
-    Default = Color3.fromRGB(255, 0, 0),
-    Flag = "ColorTeste",
-    Callback = function(color)
-        print("Cor:", color)
     end
 })
 
