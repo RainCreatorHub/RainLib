@@ -19,10 +19,18 @@
 
 #### RainLib
 
+ Load Test
+
+``` Lua
+local RainLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/RainCreatorHub/RainLibV2/refs/heads/main/RainLib.lua"))()
+```
+
  Load
+ 
 ```lua
 local RainLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/RainCreatorHub/RainLib/main/RainLib.lua"))()
 ```
+
  Window 
  
 ``` lua
