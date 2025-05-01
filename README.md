@@ -19,7 +19,7 @@
 
 #### RainLib
 
- Load Test
+ Load ( RainLib Test ) - ( onde eu testo a RainLib primeiro )
 
 ``` Lua
 local RainLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/RainCreatorHub/RainLibV2/refs/heads/main/RainLib.lua"))()
